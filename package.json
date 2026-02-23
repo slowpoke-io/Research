@@ -1,0 +1,14 @@
+{
+  "name": "Research",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "pnpm --prefix client install && pnpm --prefix client run build && pnpm --prefix server install",
+    "start": "pnpm --prefix server run start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.13.1"
+}
