@@ -1,24 +1,21 @@
 import "dotenv/config";
-// server.js
 import express from "express";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const app = express();
-app.use(express.json());
-
+// ─────────────────────────────────────────
+// Supabase Client
+// ─────────────────────────────────────────
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
-const PORT = Number(process.env.PORT ?? 3000);
-
-// ==============================
-// CONFIG (pipeline)
-// ==============================
+// ─────────────────────────────────────────
+// Pipeline Config
+// ─────────────────────────────────────────
 const PIPELINE = {
   code: "study_v1",
   assign: {
@@ -30,8 +27,8 @@ const PIPELINE = {
       id: "stage_1",
       active: true,
       variant: {
-        queryKey: "stage1Task", // ?stage1Task=pronoun|scramble
-        mode: "balanced", // "random" | "balanced"
+        queryKey: "stage1Task",
+        mode: "balanced",
         value: ["pronoun", "scramble"],
       },
       validator: {
@@ -44,12 +41,12 @@ const PIPELINE = {
       },
       params: {},
     },
-    // ✅ 新增 Stage 2 - Self-Construal Scale (Likert)
     {
       id: "stage_2",
       active: true,
       variant: {
-        mode: "balanced", // ✅ 平衡兩版
+        queryKey: "stage2Task",
+        mode: "balanced",
         value: ["inter_first", "ind_first"],
       },
       validator: {
@@ -62,106 +59,14 @@ const PIPELINE = {
       },
       params: {},
     },
-    // 其他 stages...
   ],
 };
 
-// ==============================
-// 新增 Validator 函數
-// ==============================
-
-// 在 VALIDATORS 區塊加入這個新函數：
-
-function stage2_likert_complete_both(ctx, answers) {
-  const items = answers?.likertAnswers;
-  if (!Array.isArray(items)) {
-    throw new Error("likertAnswers must be an array");
-  }
-
-  const expectedInd = Array.from({ length: 9 }, (_, i) => `SCS_IND_${i + 1}`);
-  const expectedInter = Array.from(
-    { length: 13 },
-    (_, i) => `SCS_INTER_${i + 1}`,
-  );
-  const expectedAll = [...expectedInd, ...expectedInter];
-  const expectedSet = new Set(expectedAll);
-
-  // 檢查 response 合法
-  const invalid = items.filter(
-    (it) =>
-      !it?.id ||
-      !expectedSet.has(it.id) ||
-      !Number.isInteger(it.response) ||
-      it.response < 1 ||
-      it.response > 7,
-  );
-  if (invalid.length > 0) {
-    return {
-      passed: false,
-      verdict: {
-        kind: "stage2_likert_complete_both",
-        reason: "Invalid items detected",
-        invalidCount: invalid.length,
-        invalidItems: invalid.slice(0, 10).map((x) => x.id ?? null),
-      },
-    };
-  }
-
-  // 檢查是否涵蓋全部 22 題（不允許缺題 / 重複）
-  const gotIds = new Set(items.map((x) => x.id));
-  const missing = expectedAll.filter((id) => !gotIds.has(id));
-
-  if (missing.length > 0 || gotIds.size !== expectedAll.length) {
-    return {
-      passed: false,
-      verdict: {
-        kind: "stage2_likert_complete_both",
-        reason: "Missing or duplicate question IDs",
-        expectedCount: expectedAll.length,
-        receivedUniqueCount: gotIds.size,
-        missing: missing.slice(0, 10),
-      },
-    };
-  }
-
-  // 計算兩個分量表平均
-  const byId = new Map(items.map((x) => [x.id, x.response]));
-  const mean = (ids) => {
-    const sum = ids.reduce((acc, id) => acc + (byId.get(id) ?? 0), 0);
-    return sum / ids.length;
-  };
-
-  const meanIndependent = mean(expectedInd);
-  const meanInterdependent = mean(expectedInter);
-
-  const round2 = (n) => Math.round(n * 100) / 100;
-
-  // ✅ 操弄成功判斷：對應 iv1 的分數要「大於」另一個
-  const iv1 = ctx?.iv1;
-  let manipulationSuccess = null; // 若 iv1 不合法，用 null
-
-  if (iv1 === "independent") {
-    manipulationSuccess = meanIndependent > meanInterdependent; // 嚴格大於
-  } else if (iv1 === "interdependent") {
-    manipulationSuccess = meanInterdependent > meanIndependent; // 嚴格大於
-  }
-
-  return {
-    passed: true,
-    verdict: {
-      kind: "stage2_likert_complete_both",
-      mean_independent: round2(meanIndependent),
-      mean_interdependent: round2(meanInterdependent),
-      manipulation_success: manipulationSuccess, // true | false | null
-    },
-  };
-}
-// ✅ 啟用清單：active:false 直接移除（=不存在）
 const STAGES = PIPELINE.stages.filter((s) => s.active !== false);
 
-// ==============================
-// DATA: scramble answer key
-// ==============================
+// ─────────────────────────────────────────
+// Static Data
+// ─────────────────────────────────────────
 const SCRAMBLE_ANSWER_KEY = {
   independent: [
     { id: 1, leftOver: "dissimilar" },
@@ -209,9 +114,6 @@ const SCRAMBLE_ANSWER_KEY = {
   ],
 };
 
-// ==============================
-// DATA: materials for pronoun task
-// ==============================
 const MATERIALS = {
   independent: [
     {
@@ -248,42 +150,9 @@ const PRONOUNS = {
   interdependent: new Set(["we", "our", "us", "ours"]),
 };
 
-// ===== Precompute pronoun ground truth (startup time) =====
-const PRONOUN_TRUTH = (() => {
-  const makeCounts = (arr) => {
-    const m = new Map();
-    for (const x of arr) {
-      const k = token(x);
-      if (!k) continue;
-      m.set(k, (m.get(k) ?? 0) + 1);
-    }
-    return m;
-  };
-
-  const out = {
-    independent: new Map(), // materialId -> { truthCounts, truthTotal }
-    interdependent: new Map(),
-  };
-
-  for (const iv1 of ["independent", "interdependent"]) {
-    const set = PRONOUNS[iv1];
-    const mats = MATERIALS[iv1];
-
-    for (const m of mats) {
-      const truthList = tokens(m.text).filter((t) => set.has(t)); // pronouns only, duplicates kept
-      out[iv1].set(m.materialId, {
-        truthCounts: makeCounts(truthList),
-        truthTotal: truthList.length,
-      });
-    }
-  }
-
-  return out;
-})();
-
-// ==============================
-// SMALL UTILS
-// ==============================
+// ─────────────────────────────────────────
+// Utils
+// ─────────────────────────────────────────
 const nowIso = () => new Date().toISOString();
 const norm = (x) =>
   String(x ?? "")
@@ -296,8 +165,22 @@ function newId() {
   return `anon_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
 }
 
+function token(s) {
+  return String(s ?? "")
+    .toLowerCase()
+    .trim()
+    .replace(/^[^a-z']+|[^a-z']+$/g, "");
+}
+
+function tokens(text) {
+  return String(text ?? "")
+    .split(/\s+/)
+    .map(token)
+    .filter(Boolean);
+}
+
 function stageAt(i) {
-  return STAGES[i] ?? null; // ✅ 只看啟用 stages
+  return STAGES[i] ?? null;
 }
 
 function assignIV() {
@@ -307,7 +190,9 @@ function assignIV() {
   };
 }
 
-// balanced: pick least used variant for this stage
+// ─────────────────────────────────────────
+// Balanced Variant Picker
+// ─────────────────────────────────────────
 async function balancedPick(stageId, variants) {
   const { data, error } = await supabase
     .from("submissions")
@@ -329,24 +214,39 @@ async function balancedPick(stageId, variants) {
   return rnd(least);
 }
 
-// ==============================
-// VALIDATORS
-// ==============================
+// ─────────────────────────────────────────
+// Precompute Pronoun Ground Truth
+// ─────────────────────────────────────────
+const PRONOUN_TRUTH = (() => {
+  const makeCounts = (arr) => {
+    const m = new Map();
+    for (const x of arr) {
+      const k = token(x);
+      if (!k) continue;
+      m.set(k, (m.get(k) ?? 0) + 1);
+    }
+    return m;
+  };
 
-function token(s) {
-  return String(s ?? "")
-    .toLowerCase()
-    .trim()
-    .replace(/^[^a-z']+|[^a-z']+$/g, "");
-}
+  const out = { independent: new Map(), interdependent: new Map() };
 
-function tokens(text) {
-  return String(text ?? "")
-    .split(/\s+/)
-    .map(token)
-    .filter(Boolean);
-}
+  for (const iv1 of ["independent", "interdependent"]) {
+    const set = PRONOUNS[iv1];
+    for (const m of MATERIALS[iv1]) {
+      const truthList = tokens(m.text).filter((t) => set.has(t));
+      out[iv1].set(m.materialId, {
+        truthCounts: makeCounts(truthList),
+        truthTotal: truthList.length,
+      });
+    }
+  }
 
+  return out;
+})();
+
+// ─────────────────────────────────────────
+// Validators
+// ─────────────────────────────────────────
 function stage1_pronoun_f1(ctx, answers) {
   const iv1 = ctx.iv1;
   const mats = MATERIALS[iv1];
@@ -369,11 +269,10 @@ function stage1_pronoun_f1(ctx, answers) {
     return m;
   };
 
-  const threshold = 0; //0.75; // 你可改 0.7 / 0.8
+  const threshold = 0;
 
   const perItem = items.map((it) => {
     const completed = it.completed === true;
-
     const truth = PRONOUN_TRUTH[iv1].get(it.materialId);
     if (!truth) {
       return {
@@ -384,10 +283,8 @@ function stage1_pronoun_f1(ctx, answers) {
       };
     }
 
-    // 不過濾：選錯也要算 FP
     const selectedRaw = Array.isArray(it.selectedWords) ? it.selectedWords : [];
     const selectedList = selectedRaw.map(token).filter(Boolean);
-
     const selCounts = countMap(selectedList);
 
     let tp = 0;
@@ -398,17 +295,14 @@ function stage1_pronoun_f1(ctx, answers) {
 
     const totalSel = selectedList.length;
     const totalTruth = truth.truthTotal;
-
     const fp = totalSel - tp;
     const fn = totalTruth - tp;
-
     const precision = totalSel === 0 ? 0 : tp / totalSel;
     const recall = totalTruth === 0 ? 0 : tp / totalTruth;
     const f1 =
       precision + recall === 0
         ? 0
         : (2 * precision * recall) / (precision + recall);
-
     const round3 = (n) => Math.round(n * 1000) / 1000;
 
     return {
@@ -442,7 +336,6 @@ function stage1_scramble_50(ctx, answers) {
     throw new Error("scrambleAnswers must be non-empty array");
 
   const map = new Map(key.map((x) => [x.id, x.leftOver]));
-
   let correct = 0;
   for (const ua of arr) {
     const ca = map.get(ua.id);
@@ -464,6 +357,79 @@ function stage1_scramble_50(ctx, answers) {
       kind: "stage1_scramble_50",
       iv1: ctx.iv1,
       summary: { total, correct, accuracy, threshold: 50 },
+    },
+  };
+}
+
+function stage2_likert_complete_both(ctx, answers) {
+  const items = answers?.likertAnswers;
+  if (!Array.isArray(items)) throw new Error("likertAnswers must be an array");
+
+  const expectedInd = Array.from({ length: 9 }, (_, i) => `SCS_IND_${i + 1}`);
+  const expectedInter = Array.from(
+    { length: 13 },
+    (_, i) => `SCS_INTER_${i + 1}`,
+  );
+  const expectedAll = [...expectedInd, ...expectedInter];
+  const expectedSet = new Set(expectedAll);
+
+  const invalid = items.filter(
+    (it) =>
+      !it?.id ||
+      !expectedSet.has(it.id) ||
+      !Number.isInteger(it.response) ||
+      it.response < 1 ||
+      it.response > 7,
+  );
+  if (invalid.length > 0) {
+    return {
+      passed: false,
+      verdict: {
+        kind: "stage2_likert_complete_both",
+        reason: "Invalid items detected",
+        invalidCount: invalid.length,
+        invalidItems: invalid.slice(0, 10).map((x) => x.id ?? null),
+      },
+    };
+  }
+
+  const gotIds = new Set(items.map((x) => x.id));
+  const missing = expectedAll.filter((id) => !gotIds.has(id));
+  if (missing.length > 0 || gotIds.size !== expectedAll.length) {
+    return {
+      passed: false,
+      verdict: {
+        kind: "stage2_likert_complete_both",
+        reason: "Missing or duplicate question IDs",
+        expectedCount: expectedAll.length,
+        receivedUniqueCount: gotIds.size,
+        missing: missing.slice(0, 10),
+      },
+    };
+  }
+
+  const byId = new Map(items.map((x) => [x.id, x.response]));
+  const mean = (ids) =>
+    ids.reduce((acc, id) => acc + (byId.get(id) ?? 0), 0) / ids.length;
+  const round2 = (n) => Math.round(n * 100) / 100;
+
+  const meanIndependent = mean(expectedInd);
+  const meanInterdependent = mean(expectedInter);
+
+  const iv1 = ctx?.iv1;
+  let manipulationSuccess = null;
+  if (iv1 === "independent")
+    manipulationSuccess = meanIndependent > meanInterdependent;
+  else if (iv1 === "interdependent")
+    manipulationSuccess = meanInterdependent > meanIndependent;
+
+  return {
+    passed: true,
+    verdict: {
+      kind: "stage2_likert_complete_both",
+      mean_independent: round2(meanIndependent),
+      mean_interdependent: round2(meanInterdependent),
+      manipulation_success: manipulationSuccess,
     },
   };
 }
@@ -499,31 +465,92 @@ const V = {
   stage2_likert_complete_both,
 };
 
-// ==============================
-// API
-// ==============================
+// ─────────────────────────────────────────
+// Shared Helpers (DB operations)
+// ─────────────────────────────────────────
 
-// POST /api/init  body: { prolificId? }  (若沒給會自動產生)
-// optional query: ?stage1Task=pronoun|scramble
-app.post("/api/init", async (req, res) => {
+// 純計算，不碰 DB
+async function pickVariant(stage, query = {}) {
+  const cfg = stage.variant;
+  const all = cfg.value;
+  let variantId = null;
+
+  if (cfg.queryKey) {
+    const q = norm(query?.[cfg.queryKey]);
+    if (q && all.map(norm).includes(q))
+      variantId = all.find((v) => norm(v) === q);
+  }
+  if (!variantId) {
+    if (cfg.mode === "random") variantId = rnd(all);
+    else if (cfg.mode === "balanced")
+      variantId = await balancedPick(stage.id, all);
+    else throw new Error(`Unknown variant mode: ${cfg.mode}`);
+  }
+
+  return variantId;
+}
+
+// init 時一次鎖定所有 stage 的 variant，寫入 DB
+async function resolveAllVariants(
+  prolificId,
+  existingVariants = {},
+  query = {},
+) {
+  const stage_variants = { ...existingVariants };
+
+  for (const stage of STAGES) {
+    if (stage_variants[stage.id]) continue; // 已鎖定，跳過
+    stage_variants[stage.id] = await pickVariant(stage, query);
+  }
+
+  const up = await supabase
+    .from("progress")
+    .update({ stage_variants, updated_at: nowIso() })
+    .eq("pipeline_code", PIPELINE.code)
+    .eq("prolific_id", prolificId);
+  if (up.error) throw up.error;
+
+  return stage_variants;
+}
+
+function buildStageResponse(prog, stage, variantId) {
+  return {
+    ok: true,
+    pipeline: PIPELINE.code,
+    prolificId: prog.prolific_id,
+    iv1: prog.iv1,
+    iv2: prog.iv2,
+    stage: {
+      id: stage.id,
+      variant: variantId,
+      ui: stage.ui?.[variantId] ?? null,
+    },
+  };
+}
+
+// ─────────────────────────────────────────
+// Router: /api
+// ─────────────────────────────────────────
+const apiRouter = express.Router();
+
+// POST /api/init
+apiRouter.post("/init", async (req, res) => {
   try {
     let prolificId = req.body?.prolificId;
-    console.log({ prolificId });
     if (!prolificId) prolificId = newId();
 
     await supabase.from("participants").upsert({ prolific_id: prolificId });
 
-    // load or create progress
     let { data: prog, error } = await supabase
       .from("progress")
       .select("*")
       .eq("pipeline_code", PIPELINE.code)
       .eq("prolific_id", prolificId)
       .maybeSingle();
-
     if (error) throw error;
+
     if (!prog) {
-      const { iv1, iv2 } = assignIV();
+      const { iv1, iv2 } = assignIV(req.query);
       const ins = await supabase.from("progress").insert({
         pipeline_code: PIPELINE.code,
         prolific_id: prolificId,
@@ -559,9 +586,16 @@ app.post("/api/init", async (req, res) => {
         failed_reason: prog.failed_reason,
       });
 
+    // 一次鎖定所有 stage variant（已鎖定的不會被覆蓋）
+    const stage_variants = await resolveAllVariants(
+      prolificId,
+      prog.stage_variants,
+      req.query,
+    );
+    prog.stage_variants = stage_variants;
+
     const stage = stageAt(prog.current_stage_index);
     if (!stage) {
-      // 沒有任何啟用 stage（或 index 超過了） => complete
       const up = await supabase
         .from("progress")
         .update({ completed: true, updated_at: nowIso() })
@@ -571,55 +605,15 @@ app.post("/api/init", async (req, res) => {
       return res.json({ ok: true, prolificId, completed: true });
     }
 
-    // decide variant (lock if needed)
-    let variantId = prog.stage_variants?.[stage.id];
-    if (!variantId) {
-      const cfg = stage.variant;
-      const all = cfg.value;
-
-      if (cfg.queryKey) {
-        const q = norm(req.query?.[cfg.queryKey]);
-        if (q && all.map(norm).includes(q))
-          variantId = all.find((v) => norm(v) === q);
-      }
-
-      if (!variantId) {
-        if (cfg.mode === "random") variantId = rnd(all);
-        else if (cfg.mode === "balanced")
-          variantId = await balancedPick(stage.id, all);
-        else throw new Error(`Unknown variant mode: ${cfg.mode}`);
-      }
-
-      const next = { ...(prog.stage_variants ?? {}), [stage.id]: variantId };
-      const up = await supabase
-        .from("progress")
-        .update({ stage_variants: next, updated_at: nowIso() })
-        .eq("pipeline_code", PIPELINE.code)
-        .eq("prolific_id", prolificId);
-      if (up.error) throw up.error;
-
-      prog.stage_variants = next;
-    }
-
-    return res.json({
-      ok: true,
-      pipeline: PIPELINE.code,
-      prolificId,
-      iv1: prog.iv1,
-      iv2: prog.iv2,
-      stage: {
-        id: stage.id,
-        variant: variantId,
-        ui: stage.ui?.[variantId] ?? null,
-      },
-    });
+    const variantId = stage_variants[stage.id];
+    return res.json(buildStageResponse(prog, stage, variantId));
   } catch (e) {
     return res.status(500).json({ ok: false, message: e.message });
   }
 });
 
-// GET /api/current-stage?prolificId=...
-app.get("/api/current-stage", async (req, res) => {
+// GET /api/current-stage
+apiRouter.get("/current-stage", async (req, res) => {
   try {
     const prolificId = String(req.query?.prolificId ?? "");
     if (!prolificId)
@@ -639,7 +633,6 @@ app.get("/api/current-stage", async (req, res) => {
         .json({ ok: false, message: "call /api/init first" });
 
     const prog = got.data;
-
     if (prog.completed)
       return res.json({ ok: true, prolificId, completed: true });
     if (prog.failed)
@@ -654,55 +647,25 @@ app.get("/api/current-stage", async (req, res) => {
     const stage = stageAt(prog.current_stage_index);
     if (!stage) return res.json({ ok: true, prolificId, completed: true });
 
-    let variantId = prog.stage_variants?.[stage.id];
-    if (!variantId) {
-      const cfg = stage.variant;
-      const all = cfg.value;
+    const variantId = prog.stage_variants?.[stage.id];
+    if (!variantId)
+      return res.status(500).json({
+        ok: false,
+        message: "variant not initialized, call /api/init first",
+      });
 
-      if (cfg.queryKey) {
-        const q = norm(req.query?.[cfg.queryKey]);
-        if (q && all.map(norm).includes(q))
-          variantId = all.find((v) => norm(v) === q);
-      }
-
-      if (!variantId) {
-        if (cfg.mode === "random") variantId = rnd(all);
-        else if (cfg.mode === "balanced")
-          variantId = await balancedPick(stage.id, all);
-        else throw new Error(`Unknown variant mode: ${cfg.mode}`);
-      }
-
-      const next = { ...(prog.stage_variants ?? {}), [stage.id]: variantId };
-      const up = await supabase
-        .from("progress")
-        .update({ stage_variants: next, updated_at: nowIso() })
-        .eq("pipeline_code", PIPELINE.code)
-        .eq("prolific_id", prolificId);
-      if (up.error) throw up.error;
-    }
-
-    return res.json({
-      ok: true,
-      pipeline: PIPELINE.code,
-      prolificId,
-      iv1: prog.iv1,
-      iv2: prog.iv2,
-      stage: {
-        id: stage.id,
-        variant: variantId,
-        ui: stage.ui?.[variantId] ?? null,
-      },
-    });
+    return res.json(buildStageResponse(prog, stage, variantId));
   } catch (e) {
     return res.status(500).json({ ok: false, message: e.message });
   }
 });
 
-// POST /api/submit  body: { prolificId, stageId, answers }
-app.post("/api/submit", async (req, res) => {
+// POST /api/submit
+apiRouter.post("/submit", async (req, res) => {
   try {
     const { prolificId, stageId, answers, meta } = req.body ?? {};
     const clientStageSeconds = Number(meta?.stageSeconds);
+
     if (!prolificId || !stageId || answers === undefined) {
       return res
         .status(400)
@@ -721,7 +684,6 @@ app.post("/api/submit", async (req, res) => {
         .json({ ok: false, message: "call /api/init first" });
 
     const prog = got.data;
-
     if (prog.completed)
       return res.status(409).json({ ok: false, message: "already completed" });
     if (prog.failed)
@@ -732,11 +694,10 @@ app.post("/api/submit", async (req, res) => {
     const stage = stageAt(prog.current_stage_index);
     if (!stage)
       return res.status(409).json({ ok: false, message: "already completed" });
-
     if (stage.id !== stageId)
       return res.status(403).json({ ok: false, message: "stage locked" });
 
-    // one submit per stage
+    // Duplicate submit guard
     const exist = await supabase
       .from("submissions")
       .select("id")
@@ -750,57 +711,34 @@ app.post("/api/submit", async (req, res) => {
         .status(409)
         .json({ ok: false, message: "already submitted this stage" });
 
-    // decide variant (lock if needed)
-    let variantId = prog.stage_variants?.[stage.id];
-    if (!variantId) {
-      const cfg = stage.variant;
-      const all = cfg.value;
+    const variantId = prog.stage_variants?.[stage.id];
+    if (!variantId)
+      return res.status(500).json({
+        ok: false,
+        message: "variant not initialized, call /api/init first",
+      });
 
-      if (cfg.queryKey) {
-        const q = norm(req.query?.[cfg.queryKey]);
-        if (q && all.map(norm).includes(q))
-          variantId = all.find((v) => norm(v) === q);
-      }
-
-      if (!variantId) {
-        if (cfg.mode === "random") variantId = rnd(all);
-        else if (cfg.mode === "balanced")
-          variantId = await balancedPick(stage.id, all);
-        else throw new Error(`Unknown variant mode: ${cfg.mode}`);
-      }
-
-      const next = { ...(prog.stage_variants ?? {}), [stage.id]: variantId };
-      const up = await supabase
-        .from("progress")
-        .update({ stage_variants: next, updated_at: nowIso() })
-        .eq("pipeline_code", PIPELINE.code)
-        .eq("prolific_id", prolificId);
-      if (up.error) throw up.error;
-    }
-
-    // validate
+    // Validate
     const vName = stage.validator?.[variantId];
     if (!vName)
       throw new Error(`validator not configured for ${stage.id}/${variantId}`);
-
     const fn = V[vName];
     if (!fn) throw new Error(`validator not found: ${vName}`);
 
     const params = stage.params?.[variantId];
     const ctx = { iv1: prog.iv1, iv2: prog.iv2 };
-
     const { passed, verdict } = fn(ctx, answers, params);
 
+    // Timing
     const startedAt = prog.started_at ? new Date(prog.started_at) : null;
     const totalSeconds = startedAt
       ? Math.max(0, Math.round((Date.now() - startedAt.getTime()) / 1000))
       : null;
-
     const stageSeconds = Number.isFinite(clientStageSeconds)
-      ? Math.max(0, Math.min(24 * 60 * 60, Math.round(clientStageSeconds)))
+      ? Math.max(0, Math.min(86400, Math.round(clientStageSeconds)))
       : null;
 
-    // insert submission
+    // Insert submission record
     const ins = await supabase.from("submissions").insert({
       pipeline_code: PIPELINE.code,
       stage_id: stageId,
@@ -816,6 +754,7 @@ app.post("/api/submit", async (req, res) => {
     });
     if (ins.error) throw ins.error;
 
+    // Handle fail
     if (!passed) {
       const up = await supabase
         .from("progress")
@@ -828,23 +767,18 @@ app.post("/api/submit", async (req, res) => {
         .eq("pipeline_code", PIPELINE.code)
         .eq("prolific_id", prolificId);
       if (up.error) throw up.error;
-
       return res.json({ ok: true, passed: false, lockedOut: true, verdict });
     }
 
-    // pass -> next active stage or complete
+    // Advance stage or complete
     const nextIndex = prog.current_stage_index + 1;
     const done = nextIndex >= STAGES.length;
-
     const updatePayload = {
       current_stage_index: done ? prog.current_stage_index : nextIndex,
       completed: done,
       updated_at: nowIso(),
+      ...(done && totalSeconds != null ? { total_seconds: totalSeconds } : {}),
     };
-
-    if (done && totalSeconds != null) {
-      updatePayload.total_seconds = totalSeconds; // ✅ 新增
-    }
 
     const up = await supabase
       .from("progress")
@@ -865,6 +799,12 @@ app.post("/api/submit", async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────
+// App Setup
+// ─────────────────────────────────────────
+const app = express();
+app.use(express.json());
+app.use("/api", apiRouter);
 app.get("/health", (_, res) => res.json({ ok: true }));
 
 const __filename = fileURLToPath(import.meta.url);
@@ -872,8 +812,9 @@ const __dirname = path.dirname(__filename);
 const clientDistPath = path.join(__dirname, "..", "client", "dist");
 
 app.use(express.static(clientDistPath));
-app.get(/^(?!\/api).*/, (req, res) => {
-  return res.sendFile(path.join(clientDistPath, "index.html"));
-});
+app.get(/^(?!\/api).*/, (_req, res) =>
+  res.sendFile(path.join(clientDistPath, "index.html")),
+);
 
+const PORT = Number(process.env.PORT ?? 3000);
 app.listen(PORT, () => console.log(`Server running on :${PORT}`));
