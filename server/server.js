@@ -326,7 +326,7 @@ function stage1_pronoun_f1(ctx, answers) {
     return m;
   };
 
-  const threshold = 75;
+  const threshold = 0.75;
 
   const perItem = items.map((it) => {
     const completed = it.completed === true;
