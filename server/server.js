@@ -236,7 +236,7 @@ async function assignIV() {
 // In-progress sessions with updated_at older than ABANDON_TIMEOUT_MINUTES
 // are marked failed so they stop occupying balance slots.
 // ─────────────────────────────────────────
-const ABANDON_TIMEOUT_MINUTES = 30;
+const ABANDON_TIMEOUT_MINUTES = 20;
 
 async function cleanupAbandoned() {
   const cutoff = new Date(
