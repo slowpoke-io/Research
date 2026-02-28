@@ -142,11 +142,14 @@ const scrambleData = {
     { id: 6, question: ["similar", "reading", "we", "like", "books", "life"] },
     { id: 7, question: ["much", "connected", "for", "us", "means", "group"] },
     { id: 8, question: ["community", "we", "belong", "membership", "a", "to"] },
-    { id: 9, question: ["for", "we can", "harmony", "sacrifice", "the group"] },
+    {
+      id: 9,
+      question: ["for", "can", "we", "harmony", "sacrifice", "group", "the"],
+    },
     { id: 10, question: ["our", "group", "matters", "most", "joint"] },
     {
       id: 11,
-      question: ["in many matters", "we", "a team", "join", "as", "ours"],
+      question: ["in many matters", "we", "a", "team", "join", "as", "ours"],
     },
     {
       id: 12,

@@ -957,11 +957,11 @@ adminRouter.get("/api/summary", requireAdminPassword, async (req, res) => {
 });
 
 // GET /admin  →  serve the admin HTML UI
-adminRouter.get("/", (req, res) => {
-  const __filename2 = fileURLToPath(import.meta.url);
-  const __dirname2 = path.dirname(__filename2);
-  res.sendFile(path.join(__dirname2, "admin.html"));
-});
+// adminRouter.get("/", (req, res) => {
+//   const __filename2 = fileURLToPath(import.meta.url);
+//   const __dirname2 = path.dirname(__filename2);
+//   res.sendFile(path.join(__dirname2, "admin.html"));
+// });
 
 // ─────────────────────────────────────────
 // App Setup
@@ -969,7 +969,7 @@ adminRouter.get("/", (req, res) => {
 const app = express();
 app.use(express.json());
 app.use("/api", apiRouter);
-app.use("/admin", adminRouter);
+// app.use("/admin", adminRouter);
 app.get("/health", (_, res) => res.json({ ok: true }));
 
 const __filename = fileURLToPath(import.meta.url);
@@ -977,7 +977,7 @@ const __dirname = path.dirname(__filename);
 const clientDistPath = path.join(__dirname, "..", "client", "dist");
 
 app.use(express.static(clientDistPath));
-app.get(/^(?!\/api|\/admin).*/, (_req, res) =>
+app.get(/^(?!\/api).*/, (_req, res) =>
   res.sendFile(path.join(clientDistPath, "index.html")),
 );
 
