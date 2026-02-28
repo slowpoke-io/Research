@@ -183,7 +183,7 @@ const scrambleData = {
         "co-responsible",
         "we",
         "feel",
-        "harmony",
+        "teamwork",
         "often",
       ],
     },

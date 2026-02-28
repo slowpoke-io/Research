@@ -118,7 +118,7 @@ const SCRAMBLE_ANSWER_KEY = {
     { id: 14, leftOver: "very" },
     { id: 15, leftOver: "good" },
     { id: 16, leftOver: "our" },
-    { id: 17, leftOver: "harmony" },
+    { id: 17, leftOver: "teamwork" },
     { id: 18, leftOver: "interdependence" },
     { id: 19, leftOver: "integrated" },
     { id: 20, leftOver: "us" },
