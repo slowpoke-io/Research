@@ -17,7 +17,7 @@ const supabase = createClient(
 // Pipeline Config
 // ─────────────────────────────────────────
 const PIPELINE = {
-  code: "study_v1",
+  code: "pilot_IV1_1",
   assign: {
     iv1: { mode: "balanced", values: ["independent", "interdependent"] },
     iv2: { mode: "random", values: ["A", "B", "C"] },
