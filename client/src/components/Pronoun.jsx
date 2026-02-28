@@ -422,6 +422,9 @@ export default function PronounSelector({ iv1, onSubmit, onError }) {
 
     if (currentQuestionIndex < total - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 0);
       return;
     }
 

@@ -969,7 +969,7 @@ adminRouter.get("/api/summary", requireAdminPassword, async (req, res) => {
 const app = express();
 app.use(express.json());
 app.use("/api", apiRouter);
-// app.use("/admin", adminRouter);
+app.use("/api/admin", adminRouter);
 app.get("/health", (_, res) => res.json({ ok: true }));
 
 const __filename = fileURLToPath(import.meta.url);

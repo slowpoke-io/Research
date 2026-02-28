@@ -95,6 +95,79 @@ function StatCard({ label, value, sub, accent }) {
   );
 }
 
+function AvgTimeCard({ data }) {
+  const [open, setOpen] = useState(false);
+
+  // Helper: avg stage_seconds for a given stageId + optional variantId filter
+  const avgStage = (stageId, variantId = null) => {
+    const samples = [];
+    for (const row of data) {
+      if (!row.completed) continue;
+      if (!Array.isArray(row.stages)) continue;
+      for (const s of row.stages) {
+        if (s.stage_id !== stageId) continue;
+        if (variantId && s.variant_id !== variantId) continue;
+        if (s.stage_seconds) samples.push(s.stage_seconds);
+      }
+    }
+    if (!samples.length) return null;
+    return samples.reduce((a, b) => a + b, 0) / samples.length;
+  };
+
+  const timeSamples = data.map((r) => r.total_seconds).filter(Boolean);
+  const avgTotal = timeSamples.length
+    ? timeSamples.reduce((a, b) => a + b, 0) / timeSamples.length
+    : null;
+
+  const fmtSec = (s) => (s ? `${(s / 60).toFixed(1)}m` : "—");
+
+  const rows = [
+    { label: "Stage 1 · pronoun", val: avgStage("stage_1", "pronoun") },
+    { label: "Stage 1 · scramble", val: avgStage("stage_1", "scramble") },
+    { label: "Stage 2", val: avgStage("stage_2") },
+  ];
+
+  return (
+    <div className="bg-white rounded-2xl border-l-4 border-slate-300 p-4 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">
+        Avg Time
+      </p>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 group"
+      >
+        <span className="text-2xl md:text-3xl font-black text-slate-500">
+          {fmtSec(avgTotal)}
+        </span>
+        <span
+          className={`text-slate-400 text-xs mt-1 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        >
+          ▼
+        </span>
+      </button>
+      <p className="text-xs text-slate-400 mt-0.5">
+        completed only · click to expand
+      </p>
+
+      {open && (
+        <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
+          {rows.map(({ label, val }) => (
+            <div
+              key={label}
+              className="flex items-center justify-between text-xs"
+            >
+              <span className="text-slate-500">{label}</span>
+              <span className="font-semibold tabular-nums text-slate-700">
+                {fmtSec(val)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Badge({ label, colorCls }) {
   return (
     <span
@@ -236,7 +309,7 @@ function LoginScreen({ onLogin }) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/admin/api/summary", {
+      const res = await fetch("/api/admin/api/summary", {
         headers: { "x-admin-password": pwd },
       });
       if (res.status === 401) {
@@ -333,7 +406,7 @@ function Dashboard({ password, initialData }) {
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const res = await fetch("/admin/api/summary", {
+      const res = await fetch("/api/admin/api/summary", {
         headers: { "x-admin-password": password },
       });
       const json = await res.json();
@@ -350,14 +423,6 @@ function Dashboard({ password, initialData }) {
   const completed = data.filter((r) => r.completed).length;
   const failed = data.filter((r) => r.failed).length;
   const inProg = total - completed - failed;
-  const timeSamples = data.map((r) => r.total_seconds).filter(Boolean);
-  const avgMin = timeSamples.length
-    ? (
-        timeSamples.reduce((a, b) => a + b, 0) /
-        timeSamples.length /
-        60
-      ).toFixed(1)
-    : null;
 
   const filtered = data.filter((r) => {
     if (search && !r.prolific_id.toLowerCase().includes(search.toLowerCase()))
@@ -441,12 +506,7 @@ function Dashboard({ password, initialData }) {
             accent="red"
             sub={total ? `${Math.round((failed / total) * 100)}%` : null}
           />
-          <StatCard
-            label="Avg Time"
-            value={avgMin ? `${avgMin}m` : "—"}
-            accent="slate"
-            sub="completed only"
-          />
+          <AvgTimeCard data={data} />
         </div>
 
         {/* Filters */}
