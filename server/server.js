@@ -73,7 +73,7 @@ const PROLIFIC_COMPLETE_URL =
 const PROLIFIC_FAIL_URL =
   "https://app.prolific.com/submissions/complete?cc=C83U7PTM";
 const PROLIFIC_NOCONSENT_URL =
-  "https://app.prolific.com/submissions/complete?cc=C17N0WEM";
+  "https://app.prolific.com/submissions/complete?cc=C13AA82G";
 
 // ─────────────────────────────────────────
 // Static Data
