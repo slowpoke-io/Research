@@ -30,6 +30,7 @@ const PIPELINE = {
         queryKey: "stage1Task",
         mode: "balanced",
         value: ["pronoun", "scramble"],
+        stratifyBy: { column: "iv1" }, // balance within each iv1 value
       },
       validator: {
         pronoun: "stage1_pronoun_f1",
@@ -47,7 +48,7 @@ const PIPELINE = {
       variant: {
         mode: "balanced",
         value: ["inter_first", "ind_first"],
-        stratifyBy: "stage_1", // balance within each stage_1 variant
+        stratifyBy: { stageVariant: "stage_1" }, // balance within each stage_1 variant
       },
       validator: {
         inter_first: "stage2_likert_complete_both",
@@ -269,10 +270,12 @@ async function cleanupAbandoned() {
 // reliably reflects only active participants.
 // ─────────────────────────────────────────
 async function balancedPick(stageId, variants, stratifyBy = null) {
-  // stratifyBy: { stageId, value } — only count rows where that stage's variant matches
+  // stratifyBy supports two forms:
+  //   { column: "iv1", value: "independent" }     — filter by a direct progress column
+  //   { stageVariant: "stage_1", value: "pronoun" } — filter by a stage_variants JSON key
   const { data, error } = await supabase
     .from("progress")
-    .select("stage_variants")
+    .select("stage_variants, iv1, iv2")
     .eq("pipeline_code", PIPELINE.code)
     .eq("failed", false);
 
@@ -281,8 +284,10 @@ async function balancedPick(stageId, variants, stratifyBy = null) {
   const count = Object.fromEntries(variants.map((v) => [v, 0]));
   for (const row of data ?? []) {
     if (stratifyBy) {
-      const stratum = row.stage_variants?.[stratifyBy.stageId];
-      if (stratum !== stratifyBy.value) continue;
+      const actual = stratifyBy.column
+        ? row[stratifyBy.column] // direct column (e.g. iv1)
+        : row.stage_variants?.[stratifyBy.stageVariant]; // stage_variants JSON key
+      if (actual !== stratifyBy.value) continue;
     }
     const v = row.stage_variants?.[stageId];
     if (v && count[v] !== undefined) count[v]++;
@@ -623,6 +628,7 @@ async function resolveAllVariants(
   prolificId,
   existingVariants = {},
   query = {},
+  prog = {},
 ) {
   const stage_variants = { ...existingVariants };
 
@@ -630,10 +636,25 @@ async function resolveAllVariants(
     if (stage_variants[stage.id]) continue; // 已鎖定，跳過
 
     // Read stratifyBy from stage variant config
-    const stratifyStageId = stage.variant?.stratifyBy ?? null;
-    const stratifyBy = stratifyStageId
-      ? { stageId: stratifyStageId, value: stage_variants[stratifyStageId] }
-      : null;
+    // Two config forms supported:
+    //   { column: "iv1" }        → stratify by a direct progress column (value from prog)
+    //   { stageVariant: "stage_1" } → stratify by an already-locked stage variant
+    const stratifyCfg = stage.variant?.stratifyBy ?? null;
+    let stratifyBy = null;
+    if (stratifyCfg) {
+      if (stratifyCfg.column) {
+        // value comes from the current participant's progress record
+        stratifyBy = {
+          column: stratifyCfg.column,
+          value: prog[stratifyCfg.column],
+        };
+      } else if (stratifyCfg.stageVariant) {
+        stratifyBy = {
+          stageVariant: stratifyCfg.stageVariant,
+          value: stage_variants[stratifyCfg.stageVariant],
+        };
+      }
+    }
 
     stage_variants[stage.id] = await pickVariant(stage, query, stratifyBy);
   }
@@ -738,6 +759,7 @@ apiRouter.post("/init", async (req, res) => {
       prolificId,
       prog.stage_variants,
       req.query,
+      prog,
     );
     prog.stage_variants = stage_variants;
 
