@@ -107,11 +107,19 @@ const scrambleData = {
     },
     {
       id: 19,
-      question: ["autonomous", "be the best", "always", "try to", "I"],
+      question: ["autonomous", "be the best", "to", "always", "try", "I"],
     },
     {
       id: 20,
-      question: ["I often", "from people", "distinct", "myself", "isolate"],
+      question: [
+        "I",
+        "often",
+        "people",
+        "from",
+        "distinct",
+        "myself",
+        "isolate",
+      ],
     },
   ],
   interdependent: [

@@ -33,7 +33,7 @@ const PIPELINE = {
       },
       validator: {
         pronoun: "stage1_pronoun_f1",
-        scramble: "stage1_scramble_50",
+        scramble: "stage1_scramble_75",
       },
       ui: {
         pronoun: { screen: "pronoun_selector" },
@@ -326,7 +326,7 @@ function stage1_pronoun_f1(ctx, answers) {
     return m;
   };
 
-  const threshold = 0;
+  const threshold = 75;
 
   const perItem = items.map((it) => {
     const completed = it.completed === true;
@@ -384,7 +384,7 @@ function stage1_pronoun_f1(ctx, answers) {
   };
 }
 
-function stage1_scramble_50(ctx, answers) {
+function stage1_scramble_75(ctx, answers) {
   const key = SCRAMBLE_ANSWER_KEY[ctx.iv1];
   if (!key) throw new Error("scramble key missing");
 
@@ -407,13 +407,13 @@ function stage1_scramble_50(ctx, answers) {
   const total = arr.length;
   const accuracy =
     total === 0 ? 0 : Math.round((correct / total) * 10000) / 100;
-
+  const threshold = 75;
   return {
-    passed: accuracy >= 0,
+    passed: accuracy >= threshold,
     verdict: {
-      kind: "stage1_scramble_50",
+      kind: "stage1_scramble_75",
       iv1: ctx.iv1,
-      summary: { total, correct, accuracy, threshold: 50 },
+      summary: { total, correct, accuracy, threshold: threshold },
     },
   };
 }
@@ -563,7 +563,7 @@ function attention_checks(ctx, answers, params) {
 
 const V = {
   stage1_pronoun_f1,
-  stage1_scramble_50,
+  stage1_scramble_75,
   attention_checks,
   stage2_likert_complete_both,
 };
