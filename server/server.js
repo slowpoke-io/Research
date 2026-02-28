@@ -17,10 +17,10 @@ const supabase = createClient(
 // Pipeline Config
 // ─────────────────────────────────────────
 const PIPELINE = {
-  code: "pilot_IV1_1",
+  code: "study_v1",
   assign: {
-    iv1: ["independent", "interdependent"],
-    iv2: ["A", "B", "C"],
+    iv1: { mode: "balanced", values: ["independent", "interdependent"] },
+    iv2: { mode: "random", values: ["A", "B", "C"] },
   },
   stages: [
     {
@@ -33,7 +33,7 @@ const PIPELINE = {
       },
       validator: {
         pronoun: "stage1_pronoun_f1",
-        scramble: "stage1_scramble_75",
+        scramble: "stage1_scramble_50",
       },
       ui: {
         pronoun: { screen: "pronoun_selector" },
@@ -199,11 +199,35 @@ function stageAt(i) {
   return STAGES[i] ?? null;
 }
 
-function assignIV() {
-  return {
-    iv1: rnd(PIPELINE.assign.iv1),
-    iv2: rnd(PIPELINE.assign.iv2),
+async function assignIV() {
+  const pick = async (cfg) => {
+    if (cfg.mode === "balanced") {
+      // Count non-failed progress rows per value
+      const { data, error } = await supabase
+        .from("progress")
+        .select("iv1")
+        .eq("pipeline_code", PIPELINE.code)
+        .eq("failed", false);
+      if (error) throw error;
+
+      const count = Object.fromEntries(cfg.values.map((v) => [v, 0]));
+      for (const row of data ?? []) {
+        if (count[row.iv1] !== undefined) count[row.iv1]++;
+      }
+      let min = Infinity;
+      for (const v of cfg.values) min = Math.min(min, count[v]);
+      const least = cfg.values.filter((v) => count[v] === min);
+      return rnd(least);
+    }
+    // default: random
+    return rnd(cfg.values);
   };
+
+  const [iv1, iv2] = await Promise.all([
+    pick(PIPELINE.assign.iv1),
+    pick(PIPELINE.assign.iv2),
+  ]);
+  return { iv1, iv2 };
 }
 
 // ─────────────────────────────────────────
@@ -211,7 +235,7 @@ function assignIV() {
 // In-progress sessions with updated_at older than ABANDON_TIMEOUT_MINUTES
 // are marked failed so they stop occupying balance slots.
 // ─────────────────────────────────────────
-const ABANDON_TIMEOUT_MINUTES = 20;
+const ABANDON_TIMEOUT_MINUTES = 30;
 
 async function cleanupAbandoned() {
   const cutoff = new Date(
@@ -326,7 +350,7 @@ function stage1_pronoun_f1(ctx, answers) {
     return m;
   };
 
-  const threshold = 0.75;
+  const threshold = 0;
 
   const perItem = items.map((it) => {
     const completed = it.completed === true;
@@ -384,7 +408,7 @@ function stage1_pronoun_f1(ctx, answers) {
   };
 }
 
-function stage1_scramble_75(ctx, answers) {
+function stage1_scramble_50(ctx, answers) {
   const key = SCRAMBLE_ANSWER_KEY[ctx.iv1];
   if (!key) throw new Error("scramble key missing");
 
@@ -407,13 +431,13 @@ function stage1_scramble_75(ctx, answers) {
   const total = arr.length;
   const accuracy =
     total === 0 ? 0 : Math.round((correct / total) * 10000) / 100;
-  const threshold = 75;
+
   return {
-    passed: accuracy >= threshold,
+    passed: accuracy >= 0,
     verdict: {
-      kind: "stage1_scramble_75",
+      kind: "stage1_scramble_50",
       iv1: ctx.iv1,
-      summary: { total, correct, accuracy, threshold: threshold },
+      summary: { total, correct, accuracy, threshold: 50 },
     },
   };
 }
@@ -563,7 +587,7 @@ function attention_checks(ctx, answers, params) {
 
 const V = {
   stage1_pronoun_f1,
-  stage1_scramble_75,
+  stage1_scramble_50,
   attention_checks,
   stage2_likert_complete_both,
 };
@@ -667,7 +691,7 @@ apiRouter.post("/init", async (req, res) => {
     if (error) throw error;
 
     if (!prog) {
-      const { iv1, iv2 } = assignIV(req.query);
+      const { iv1, iv2 } = await assignIV();
       const ins = await supabase.from("progress").insert({
         pipeline_code: PIPELINE.code,
         prolific_id: prolificId,
