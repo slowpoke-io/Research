@@ -112,7 +112,7 @@ export default function Consent() {
                   </>,
                   <>
                     The session is left inactive for more than{" "}
-                    <strong>30 minutes</strong> (timeout)
+                    <strong>20 minutes</strong> (timeout)
                   </>,
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-2">

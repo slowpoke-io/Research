@@ -17,7 +17,7 @@ const supabase = createClient(
 // Pipeline Config
 // ─────────────────────────────────────────
 const PIPELINE = {
-  code: "study_v1",
+  code: "pilot_IV1_1",
   assign: {
     iv1: ["independent", "interdependent"],
     iv2: ["A", "B", "C"],
@@ -47,6 +47,7 @@ const PIPELINE = {
       variant: {
         mode: "balanced",
         value: ["inter_first", "ind_first"],
+        stratifyBy: "stage_1", // balance within each stage_1 variant
       },
       validator: {
         inter_first: "stage2_likert_complete_both",
@@ -210,7 +211,7 @@ function assignIV() {
 // In-progress sessions with updated_at older than ABANDON_TIMEOUT_MINUTES
 // are marked failed so they stop occupying balance slots.
 // ─────────────────────────────────────────
-const ABANDON_TIMEOUT_MINUTES = 30;
+const ABANDON_TIMEOUT_MINUTES = 20;
 
 async function cleanupAbandoned() {
   const cutoff = new Date(
@@ -243,7 +244,8 @@ async function cleanupAbandoned() {
 // Abandoned sessions are cleaned up before this runs, so failed=false
 // reliably reflects only active participants.
 // ─────────────────────────────────────────
-async function balancedPick(stageId, variants) {
+async function balancedPick(stageId, variants, stratifyBy = null) {
+  // stratifyBy: { stageId, value } — only count rows where that stage's variant matches
   const { data, error } = await supabase
     .from("progress")
     .select("stage_variants")
@@ -254,6 +256,10 @@ async function balancedPick(stageId, variants) {
 
   const count = Object.fromEntries(variants.map((v) => [v, 0]));
   for (const row of data ?? []) {
+    if (stratifyBy) {
+      const stratum = row.stage_variants?.[stratifyBy.stageId];
+      if (stratum !== stratifyBy.value) continue;
+    }
     const v = row.stage_variants?.[stageId];
     if (v && count[v] !== undefined) count[v]++;
   }
@@ -320,7 +326,7 @@ function stage1_pronoun_f1(ctx, answers) {
     return m;
   };
 
-  const threshold = 0.5;
+  const threshold = 0;
 
   const perItem = items.map((it) => {
     const completed = it.completed === true;
@@ -403,7 +409,7 @@ function stage1_scramble_50(ctx, answers) {
     total === 0 ? 0 : Math.round((correct / total) * 10000) / 100;
 
   return {
-    passed: accuracy >= 50,
+    passed: accuracy >= 0,
     verdict: {
       kind: "stage1_scramble_50",
       iv1: ctx.iv1,
@@ -567,7 +573,7 @@ const V = {
 // ─────────────────────────────────────────
 
 // 純計算，不碰 DB
-async function pickVariant(stage, query = {}) {
+async function pickVariant(stage, query = {}, stratifyBy = null) {
   const cfg = stage.variant;
   const all = cfg.value;
   let variantId = null;
@@ -581,7 +587,7 @@ async function pickVariant(stage, query = {}) {
   if (!variantId) {
     if (cfg.mode === "random") variantId = rnd(all);
     else if (cfg.mode === "balanced")
-      variantId = await balancedPick(stage.id, all);
+      variantId = await balancedPick(stage.id, all, stratifyBy);
     else throw new Error(`Unknown variant mode: ${cfg.mode}`);
   }
 
@@ -598,7 +604,14 @@ async function resolveAllVariants(
 
   for (const stage of STAGES) {
     if (stage_variants[stage.id]) continue; // 已鎖定，跳過
-    stage_variants[stage.id] = await pickVariant(stage, query);
+
+    // Read stratifyBy from stage variant config
+    const stratifyStageId = stage.variant?.stratifyBy ?? null;
+    const stratifyBy = stratifyStageId
+      ? { stageId: stratifyStageId, value: stage_variants[stratifyStageId] }
+      : null;
+
+    stage_variants[stage.id] = await pickVariant(stage, query, stratifyBy);
   }
 
   const up = await supabase
@@ -854,7 +867,11 @@ apiRouter.post("/submit", async (req, res) => {
       ? Math.max(0, Math.min(86400, Math.round(clientStageSeconds)))
       : null;
 
-    // Insert submission record
+    // Timeout check — total session exceeded ABANDON_TIMEOUT_MINUTES
+    const timeoutSeconds = ABANDON_TIMEOUT_MINUTES * 60;
+    const timedOut = totalSeconds != null && totalSeconds > timeoutSeconds;
+
+    // Insert submission record (always, to preserve data even on timeout)
     const ins = await supabase.from("submissions").insert({
       pipeline_code: PIPELINE.code,
       stage_id: stageId,
@@ -866,6 +883,28 @@ apiRouter.post("/submit", async (req, res) => {
       stage_seconds: stageSeconds,
     });
     if (ins.error) throw ins.error;
+
+    // Handle timeout — total session exceeded limit
+    if (timedOut) {
+      const up = await supabase
+        .from("progress")
+        .update({
+          failed: true,
+          failed_reason: {
+            reason: "timeout",
+            cutoff_minutes: ABANDON_TIMEOUT_MINUTES,
+            total_seconds: totalSeconds,
+          },
+          updated_at: nowIso(),
+        })
+        .eq("pipeline_code", PIPELINE.code)
+        .eq("prolific_id", prolificId);
+      if (up.error) throw up.error;
+      return res.status(403).json({
+        ok: false,
+        message: "locked out (failed)",
+      });
+    }
 
     // Handle fail
     if (!passed) {
@@ -956,20 +995,13 @@ adminRouter.get("/api/summary", requireAdminPassword, async (req, res) => {
   }
 });
 
-// GET /admin  →  serve the admin HTML UI
-// adminRouter.get("/", (req, res) => {
-//   const __filename2 = fileURLToPath(import.meta.url);
-//   const __dirname2 = path.dirname(__filename2);
-//   res.sendFile(path.join(__dirname2, "admin.html"));
-// });
-
 // ─────────────────────────────────────────
 // App Setup
 // ─────────────────────────────────────────
 const app = express();
 app.use(express.json());
 app.use("/api", apiRouter);
-app.use("/api/admin", adminRouter);
+app.use("/api/admin", adminRouter); // admin API 移到 /api/admin，不佔 /admin 路徑
 app.get("/health", (_, res) => res.json({ ok: true }));
 
 const __filename = fileURLToPath(import.meta.url);

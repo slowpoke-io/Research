@@ -95,6 +95,88 @@ function StatCard({ label, value, sub, accent }) {
   );
 }
 
+function CompletedCard({ data, total }) {
+  const [open, setOpen] = useState(false);
+
+  const completed = data.filter((r) => r.completed);
+  const count = completed.length;
+  const pct = total ? Math.round((count / total) * 100) : null;
+
+  const cell = (task, iv1) =>
+    completed.filter((r) => {
+      const stage1 =
+        Array.isArray(r.stages) &&
+        r.stages.find((s) => s.stage_id === "stage_1");
+      return stage1?.variant_id === task && r.iv1 === iv1;
+    }).length;
+
+  const tasks = ["pronoun", "scramble"];
+  const ivs = ["independent", "interdependent"];
+
+  return (
+    <div className="bg-white rounded-2xl border-l-4 border-emerald-400 p-4 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-1">
+        Completed
+      </p>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 group"
+      >
+        <span className="text-2xl md:text-3xl font-black text-emerald-600">
+          {count}
+        </span>
+        <span
+          className={`text-slate-400 text-xs mt-1 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        >
+          ▼
+        </span>
+      </button>
+      {pct != null && (
+        <p className="text-xs text-slate-400 mt-0.5">
+          {pct}% · click to expand
+        </p>
+      )}
+
+      {open && (
+        <div className="mt-3 pt-3 border-t border-slate-100">
+          <table className="w-full text-xs">
+            <thead>
+              <tr>
+                <th className="text-left text-slate-400 font-medium pb-1.5" />
+                {ivs.map((iv) => (
+                  <th
+                    key={iv}
+                    className="text-center text-slate-400 font-medium pb-1.5 capitalize"
+                  >
+                    {iv === "independent" ? "Inde." : "Inter."}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {tasks.map((task) => (
+                <tr key={task} className="border-t border-slate-50">
+                  <td className="py-1 text-slate-500 capitalize pr-2">
+                    {task}
+                  </td>
+                  {ivs.map((iv) => (
+                    <td
+                      key={iv}
+                      className="py-1 text-center font-semibold tabular-nums text-slate-700"
+                    >
+                      {cell(task, iv)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AvgTimeCard({ data }) {
   const [open, setOpen] = useState(false);
 
@@ -309,7 +391,9 @@ function LoginScreen({ onLogin }) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/api/summary", {
+      const query = window.location.search || "";
+
+      const res = await fetch(`/api/admin/api/summary${query}`, {
         headers: { "x-admin-password": pwd },
       });
       if (res.status === 401) {
@@ -406,7 +490,8 @@ function Dashboard({ password, initialData }) {
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const res = await fetch("/api/admin/api/summary", {
+      const query = window.location.search || "";
+      const res = await fetch(`/api/admin/api/summary${query}`, {
         headers: { "x-admin-password": password },
       });
       const json = await res.json();
@@ -493,12 +578,7 @@ function Dashboard({ password, initialData }) {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-5">
           <StatCard label="Total" value={total} accent="violet" />
-          <StatCard
-            label="Completed"
-            value={completed}
-            accent="emerald"
-            sub={total ? `${Math.round((completed / total) * 100)}%` : null}
-          />
+          <CompletedCard data={data} total={total} />
           <StatCard label="In Progress" value={inProg} accent="amber" />
           <StatCard
             label="Failed"
