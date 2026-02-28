@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study Admin</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f4f6f9;
+        color: #1a1a2e;
+        min-height: 100vh;
+      }
+
+      /* ── Login ── */
+      #login-screen {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .login-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 40px;
+        width: 340px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      }
+      .login-card h1 {
+        font-size: 1.4rem;
+        margin-bottom: 24px;
+        color: #1a1a2e;
+      }
+      .login-card input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        outline: none;
+        margin-bottom: 12px;
+      }
+      .login-card input:focus {
+        border-color: #6366f1;
+      }
+      .btn-primary {
+        width: 100%;
+        padding: 10px;
+        background: #6366f1;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.15s;
+      }
+      .btn-primary:hover {
+        background: #4f46e5;
+      }
+      .error-msg {
+        color: #ef4444;
+        font-size: 0.85rem;
+        margin-top: 8px;
+      }
+
+      /* ── Dashboard ── */
+      #dashboard {
+        display: none;
+      }
+
+      header {
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 14px 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      header h1 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a1a2e;
+      }
+      header .meta {
+        font-size: 0.82rem;
+        color: #6b7280;
+      }
+
+      .main {
+        padding: 24px 28px;
+      }
+
+      /* ── Stats bar ── */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+      .stat-card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 18px 20px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      }
+      .stat-card .label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .stat-card .value {
+        font-size: 1.7rem;
+        font-weight: 700;
+        margin-top: 4px;
+      }
+      .stat-card.completed .value {
+        color: #10b981;
+      }
+      .stat-card.failed .value {
+        color: #ef4444;
+      }
+      .stat-card.progress .value {
+        color: #f59e0b;
+      }
+      .stat-card.total .value {
+        color: #6366f1;
+      }
+
+      /* ── Filters ── */
+      .filters {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .filters select,
+      .filters input {
+        padding: 7px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 7px;
+        font-size: 0.85rem;
+        background: #fff;
+        outline: none;
+      }
+      .filters select:focus,
+      .filters input:focus {
+        border-color: #6366f1;
+      }
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .badge.green {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .badge.red {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .badge.yellow {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .badge.blue {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      .badge.gray {
+        background: #f3f4f6;
+        color: #374151;
+      }
+
+      /* ── Table ── */
+      .table-wrap {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.84rem;
+      }
+      thead th {
+        background: #f9fafb;
+        padding: 10px 14px;
+        text-align: left;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #6b7280;
+        border-bottom: 1px solid #e5e7eb;
+        white-space: nowrap;
+      }
+      tbody tr {
+        border-bottom: 1px solid #f3f4f6;
+      }
+      tbody tr:last-child {
+        border-bottom: none;
+      }
+      tbody tr:hover {
+        background: #fafafa;
+      }
+      td {
+        padding: 10px 14px;
+        vertical-align: middle;
+      }
+      td.mono {
+        font-family: monospace;
+        font-size: 0.8rem;
+        color: #6b7280;
+      }
+
+      /* ── Stage pills ── */
+      .stages-cell {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      .stage-pill {
+        font-size: 0.72rem;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+      .stage-pill:hover {
+        opacity: 0.75;
+      }
+      .stage-pill.pass {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .stage-pill.fail {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      /* ── Verdict modal ── */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-overlay.open {
+        display: flex;
+      }
+      .modal {
+        background: #fff;
+        border-radius: 12px;
+        padding: 28px;
+        width: 560px;
+        max-width: 95vw;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+      }
+      .modal h2 {
+        font-size: 1rem;
+        margin-bottom: 12px;
+      }
+      .modal pre {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 14px;
+        font-size: 0.78rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+        border: 1px solid #e5e7eb;
+      }
+      .modal-close {
+        margin-top: 16px;
+        padding: 8px 20px;
+        background: #e5e7eb;
+        border: none;
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      .modal-close:hover {
+        background: #d1d5db;
+      }
+
+      .refresh-btn {
+        padding: 7px 14px;
+        background: #6366f1;
+        color: #fff;
+        border: none;
+        border-radius: 7px;
+        font-size: 0.84rem;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .refresh-btn:hover {
+        background: #4f46e5;
+      }
+      .loading {
+        color: #9ca3af;
+        font-size: 0.9rem;
+        padding: 24px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ── Login ── -->
+    <div id="login-screen">
+      <div class="login-card">
+        <h1>🔒 Admin Login</h1>
+        <input id="pwd-input" type="password" placeholder="Password" />
+        <button class="btn-primary" onclick="doLogin()">Sign in</button>
+        <div id="login-error" class="error-msg"></div>
+      </div>
+    </div>
+
+    <!-- ── Dashboard ── -->
+    <div id="dashboard">
+      <header>
+        <h1>📊 Study Dashboard</h1>
+        <span class="meta" id="last-updated"></span>
+      </header>
+
+      <div class="main">
+        <!-- Stats -->
+        <div class="stats" id="stats-bar"></div>
+
+        <!-- Filters + refresh -->
+        <div class="filters">
+          <input
+            id="search"
+            placeholder="Search Prolific ID…"
+            oninput="renderTable()"
+          />
+          <select id="filter-status" onchange="renderTable()">
+            <option value="">All status</option>
+            <option value="completed">Completed</option>
+            <option value="failed">Failed</option>
+            <option value="in_progress">In progress</option>
+          </select>
+          <select id="filter-iv1" onchange="renderTable()">
+            <option value="">All iv1</option>
+            <option value="independent">independent</option>
+            <option value="interdependent">interdependent</option>
+          </select>
+          <select id="filter-iv2" onchange="renderTable()">
+            <option value="">All iv2</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
+          <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+          <div id="table-container" class="loading">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Verdict Modal ── -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+      <div class="modal">
+        <h2 id="modal-title">Verdict</h2>
+        <pre id="modal-body"></pre>
+        <button class="modal-close" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+
+    <script>
+      let password = "";
+      let allData = [];
+
+      // ── Login ──
+      document.getElementById("pwd-input").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") doLogin();
+      });
+
+      async function doLogin() {
+        password = document.getElementById("pwd-input").value.trim();
+        if (!password) return;
+        const ok = await loadData(true);
+        if (ok) {
+          document.getElementById("login-screen").style.display = "none";
+          document.getElementById("dashboard").style.display = "block";
+        }
+      }
+
+      // ── Fetch ──
+      async function loadData(isLogin = false) {
+        try {
+          const res = await fetch(`/admin/api/summary`, {
+            headers: { "x-admin-password": password },
+          });
+          if (res.status === 401) {
+            document.getElementById("login-error").textContent =
+              "Wrong password.";
+            return false;
+          }
+          const json = await res.json();
+          if (!json.ok) throw new Error(json.message);
+          allData = json.data ?? [];
+          document.getElementById("last-updated").textContent =
+            "Updated: " + new Date().toLocaleTimeString();
+          renderStats();
+          renderTable();
+          return true;
+        } catch (e) {
+          if (!isLogin) alert("Error: " + e.message);
+          else document.getElementById("login-error").textContent = e.message;
+          return false;
+        }
+      }
+
+      // ── Stats ──
+      function renderStats() {
+        const total = allData.length;
+        const completed = allData.filter((r) => r.completed).length;
+        const failed = allData.filter((r) => r.failed).length;
+        const inProg = total - completed - failed;
+        const avgSecs = allData
+          .filter((r) => r.total_seconds)
+          .map((r) => r.total_seconds);
+        const avgMin = avgSecs.length
+          ? (avgSecs.reduce((a, b) => a + b, 0) / avgSecs.length / 60).toFixed(
+              1,
+            )
+          : "—";
+
+        document.getElementById("stats-bar").innerHTML = `
+    <div class="stat-card total">
+      <div class="label">Total</div>
+      <div class="value">${total}</div>
+    </div>
+    <div class="stat-card completed">
+      <div class="label">Completed</div>
+      <div class="value">${completed}</div>
+    </div>
+    <div class="stat-card progress">
+      <div class="label">In Progress</div>
+      <div class="value">${inProg}</div>
+    </div>
+    <div class="stat-card failed">
+      <div class="label">Failed</div>
+      <div class="value">${failed}</div>
+    </div>
+    <div class="stat-card" style="">
+      <div class="label">Avg time (min)</div>
+      <div class="value" style="color:#6366f1">${avgMin}</div>
+    </div>
+  `;
+      }
+
+      // ── Table ──
+      function filtered() {
+        const search = document.getElementById("search").value.toLowerCase();
+        const status = document.getElementById("filter-status").value;
+        const iv1 = document.getElementById("filter-iv1").value;
+        const iv2 = document.getElementById("filter-iv2").value;
+
+        return allData.filter((r) => {
+          if (search && !r.prolific_id.toLowerCase().includes(search))
+            return false;
+          if (iv1 && r.iv1 !== iv1) return false;
+          if (iv2 && r.iv2 !== iv2) return false;
+          if (status === "completed" && !r.completed) return false;
+          if (status === "failed" && !r.failed) return false;
+          if (status === "in_progress" && (r.completed || r.failed))
+            return false;
+          return true;
+        });
+      }
+
+      function statusBadge(r) {
+        if (r.completed) return `<span class="badge green">Completed</span>`;
+        if (r.failed) return `<span class="badge red">Failed</span>`;
+        return `<span class="badge yellow">In Progress</span>`;
+      }
+
+      function stagePills(stages) {
+        if (!stages || !stages.length)
+          return "<span style='color:#9ca3af'>—</span>";
+        return `<div class="stages-cell">${stages
+          .map((s) => {
+            const cls = s.passed ? "pass" : "fail";
+            return `<span class="stage-pill ${cls}" onclick='showVerdict(${JSON.stringify(s)})'>${s.stage_id} (${s.variant_id})</span>`;
+          })
+          .join("")}</div>`;
+      }
+
+      function fmtSecs(s) {
+        if (!s) return "—";
+        const m = Math.floor(s / 60),
+          sec = s % 60;
+        return `${m}m ${sec}s`;
+      }
+
+      function renderTable() {
+        const rows = filtered();
+        if (!rows.length) {
+          document.getElementById("table-container").innerHTML =
+            `<div class="loading">No data found.</div>`;
+          return;
+        }
+
+        const html = `
+    <table>
+      <thead>
+        <tr>
+          <th>Prolific ID</th>
+          <th>iv1</th>
+          <th>iv2</th>
+          <th>Status</th>
+          <th>Stages</th>
+          <th>Time</th>
+          <th>Started</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows
+          .map(
+            (r) => `
+          <tr>
+            <td class="mono">${r.prolific_id}</td>
+            <td><span class="badge ${r.iv1 === "independent" ? "blue" : "gray"}">${r.iv1}</span></td>
+            <td><span class="badge gray">${r.iv2}</span></td>
+            <td>${statusBadge(r)}</td>
+            <td>${stagePills(r.stages)}</td>
+            <td>${fmtSecs(r.total_seconds)}</td>
+            <td style="color:#9ca3af;font-size:.78rem">${r.started_at ? new Date(r.started_at).toLocaleString() : "—"}</td>
+          </tr>
+        `,
+          )
+          .join("")}
+      </tbody>
+    </table>
+  `;
+        document.getElementById("table-container").innerHTML = html;
+      }
+
+      // ── Verdict modal ──
+      function showVerdict(stage) {
+        document.getElementById("modal-title").textContent =
+          `${stage.stage_id} / ${stage.variant_id} — ${stage.passed ? "✅ Passed" : "❌ Failed"}`;
+        document.getElementById("modal-body").textContent = JSON.stringify(
+          stage.verdict,
+          null,
+          2,
+        );
+        document.getElementById("modal-overlay").classList.add("open");
+      }
+
+      function closeModal(e) {
+        if (!e || e.target === document.getElementById("modal-overlay")) {
+          document.getElementById("modal-overlay").classList.remove("open");
+        }
+      }
+    </script>
+  </body>
+</html>

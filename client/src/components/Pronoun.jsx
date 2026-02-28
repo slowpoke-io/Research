@@ -5,10 +5,13 @@ import FullscreenLoading from "./FullscreenLoading";
 const CONFIG = {
   question: {
     instructionPoints: [
-      { type: "text", text: "Read the paragraph carefully." },
       {
         type: "text",
-        text: "Select (circle) every pronoun you find in the paragraph.",
+        text: "There are 3 short paragraphs in total. Please read each one carefully.",
+      },
+      {
+        type: "text",
+        text: "Select every pronoun you find in the paragraph.",
       },
       {
         type: "examples",
@@ -20,8 +23,18 @@ const CONFIG = {
         text: "Click a word to toggle selection (select / unselect).",
       },
       {
-        type: "text",
-        text: "Take your time and submit when you are finished.",
+        type: "animated_example",
+        sentence: [
+          { word: "She", isPronoun: true },
+          { word: "finished", isPronoun: false },
+          { word: "her", isPronoun: true },
+          { word: "report,", isPronoun: false },
+          { word: "and", isPronoun: false },
+          { word: "we", isPronoun: true },
+          { word: "reviewed", isPronoun: false },
+          { word: "it", isPronoun: true },
+          { word: "together.", isPronoun: false },
+        ],
       },
     ],
     totalQuestions: 3,
@@ -44,39 +57,110 @@ const CONFIG = {
   materials: {
     independent: [
       {
-        id: "material1_independent",
-        title: "Exercise I",
-        text: "On Friday, my weekend looks free, so I plan a short trip for myself. After I check my budget, I choose my own route and pick a place that feels unique and different to me. To keep my autonomy, I leave my schedule loose and keep my options separate and apart. At the map, I compare routes and choose the route that fits my pace. If a new idea appears, I diverge and adjust quickly. With my bag ready, I head out alone and enjoy my solitude. By the end, I feel calm and refreshed, and I like the sense of freedom in my choices.",
+        id: "PRON_IND_1",
+        title: "Task I",
+        text: "On Friday afternoon, my work queue becomes open, and I review my tasks before I begin. After I check my schedule, I choose my own order and move my highest priority item to the top. My focus stays on my goal, so I keep my options separate and apart while I compare deadlines. If a new request appears, I pause, diverge from my first order, and adjust my plan for my pace and for me. A clear list helps me track my progress, and I mark my completed steps in my notebook. Near the end, I return to my first priority and finish my remaining work. By the end, I feel calm and focused, and my work choices give me a clear sense of freedom.",
       },
       {
-        id: "material2_independent",
-        title: "Exercise II",
-        text: "Before I start the assignment, my notes spread across my desk, and my outline stays open. After a quick scan, I choose my own angle and keep my argument distinct and different. To stay free to revise, I build a simple checklist and write my introduction in my own words. As my draft grows, I separate each section and refine my transitions until my logic feels clear to me. When a sentence sounds weak, I rewrite the sentence and stay assertive about my choices. Near the end, I check my citations and my formatting, then I submit my final file. The assignment earns a high score, and my independent approach supports my result.",
+        id: "PRON_IND_2",
+        title: "Task II",
+        text: "Before I start the report, I review my source list and mark my key points in my notebook. After a quick scan, I choose my own angle and keep my argument distinct and different. To stay free to revise, I build a simple checklist and write my opening paragraph in my own words. As my draft grows, I separate each section and refine my transitions until my logic feels clear to me. When a sentence sounds weak, I rewrite the sentence and stay assertive about my choices, and my checklist helps me keep my structure consistent. Near the end, I check my citations and my formatting, then I submit my final file. The report earns a high evaluation, and my own approach supports my result for me.",
       },
       {
-        id: "material3_independent",
-        title: "Exercise III",
-        text: "On Saturday, my short trip begins with a quiet train ride, and I keep my bag close. A new neighborhood feels different from my usual streets, so I follow my curiosity and choose my own pace. At a small shop, my attention moves to a unique local snack, and I decide to try my favorite flavor. A narrow side road looks less crowded, so I turn apart from the main path and enjoy being alone. The moment brings a sense of freedom, and my autonomy feels natural. Later, I sit at a corner table and write a few notes in my notebook. By the end, my solitude feels calm, and I like how my choices stay mine.",
+        id: "PRON_IND_3",
+        title: "Task III",
+        text: "On Monday, my project review begins in a meeting room, and I open my notes before my update. After a quick scan, I choose my own order and keep my main points distinct and clear. During my review, I explain my decisions in my own words and stay assertive about my choices. If a new question appears, I pause, compare options, and adjust my response for my pace and for me. After my review, I return to my desk and record my next steps in my notebook, and my notes stay with me for my next task. Near the end of my workday, I check my task list and organize my materials. By the end, I feel steady and clear, and I like how my work choices stay mine.",
       },
     ],
     interdependent: [
       {
-        id: "material1_interdependent",
-        title: "Exercise I",
-        text: "On Friday, our weekend looks open, so we plan a short trip together. After we check our budget, we choose our shared route and pick a place that feels similar for us. To stay connected, we keep our schedule flexible and share our options in partnership. At the map, we compare routes and choose the route that fits our group pace. If a new idea appears, we agree and adjust quickly, then we keep our plan cohesive. With our bags ready, we head out together and enjoy our closeness. By the end, we feel warm and relaxed, and we like the feeling of connection in our time together.",
+        id: "PRON_INTER_1",
+        title: "Task I",
+        text: "On Friday afternoon, our work queue becomes open, and we review our tasks before we begin. After we check our schedule, we choose our shared order and move our highest priority item to the top. Our focus stays on our goal, so we keep our options connected while we compare deadlines. If a new request appears, we pause, agree on a new order, and adjust our plan for our pace and for us. A clear list helps us track our progress, and we mark our completed steps in our notebook. Near the end, we return to our first priority and finish our remaining work. By the end, we feel calm and focused, and our work choices give us a clear sense of connection.",
       },
       {
-        id: "material2_interdependent",
-        title: "Exercise II",
-        text: "Before we start the assignment, our notes spread across the desk, and our outline stays open. After a quick scan, we choose our shared angle and keep our argument similar across our sections. To work together, we build a simple checklist and write our introduction in our shared voice. As our draft grows, we connect each section and revise with overlap across our edits. When a sentence sounds weak, we rewrite the sentence and stay cooperative and agreeable. Near the end, we check our citations and our formatting, then we submit our final file. The assignment earns a high score, and our interdependent teamwork supports our result.",
+        id: "PRON_INTER_2",
+        title: "Task II",
+        text: "Before we start the report, we review our source list and mark our key points in our notebook. After a quick scan, we choose our shared angle and keep our argument similar across our sections. To work together, we build a simple checklist and write our opening paragraph in our shared voice. As our draft grows, we connect each section and revise with overlap across our edits until our logic feels clear to us. When a sentence sounds weak, we rewrite the sentence and stay cooperative and agreeable, and our checklist helps us keep our structure consistent. Near the end, we check our citations and our formatting, then we submit our final file. The report earns a high evaluation, and our shared teamwork supports our result for us.",
       },
       {
-        id: "material3_interdependent",
-        title: "Exercise III",
-        text: "On Saturday, our short trip begins with a quiet train ride, and we keep our bags close. A new neighborhood feels different from our usual streets, so we stay together and choose our shared pace. At a small shop, our attention moves to a local snack, and we share our favorite flavor. A narrow side road looks less crowded, so we turn together and keep our group close. The moment brings a sense of connection, and our partnership feels natural. Later, we sit at a corner table and write a few notes in our notebook. By the end, our closeness feels calm, and we like our time together.",
+        id: "PRON_INTER_3",
+        title: "Task III",
+        text: "On Monday, our project review begins in a meeting room, and we open our notes before our update. After a quick scan, we choose our shared order and keep our main points connected and clear. During our review, we explain our decisions in our shared voice and stay cooperative and agreeable in our choices. If a new question appears, we pause, compare options, and adjust our response for our pace and for us. After our review, we return to our work area and record our next steps in our notebook, and our notes stay with us for our next task. Near the end of our workday, we check our task list and organize our materials. By the end, we feel steady and clear, and we like our work time together.",
       },
     ],
   },
+};
+
+// ============ Animated example ============
+const AnimatedExample = ({ sentence }) => {
+  const pronounIndices = sentence
+    .map((t, i) => (t.isPronoun ? i : -1))
+    .filter((i) => i !== -1);
+
+  const [lit, setLit] = useState(new Set());
+
+  useEffect(() => {
+    // Sequentially highlight each pronoun, then pause, then repeat
+    let cancelled = false;
+    let timeouts = [];
+
+    const run = () => {
+      // Reset
+      setLit(new Set());
+
+      pronounIndices.forEach((idx, order) => {
+        const t1 = setTimeout(
+          () => {
+            if (cancelled) return;
+            setLit((prev) => new Set([...prev, idx]));
+          },
+          600 + order * 500,
+        );
+        timeouts.push(t1);
+      });
+
+      // Hold fully lit, then restart
+      const totalDelay = 600 + pronounIndices.length * 500 + 1800;
+      const t2 = setTimeout(() => {
+        if (cancelled) return;
+        run();
+      }, totalDelay);
+      timeouts.push(t2);
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+      timeouts.forEach(clearTimeout);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="flex-1">
+      <p className="mb-2 font-medium">
+        Example — pronouns are highlighted as you select them:
+      </p>
+      <div className="bg-white rounded-lg border border-slate-200 px-4 py-3 flex flex-wrap gap-x-1.5 gap-y-1 text-base leading-relaxed">
+        {sentence.map((token, i) => {
+          const active = lit.has(i);
+          return (
+            <span
+              key={i}
+              className={`rounded px-1 transition-all duration-300 font-medium ${
+                active
+                  ? "bg-indigo-100 text-indigo-700 ring-1 ring-indigo-300"
+                  : "text-slate-800"
+              }`}
+            >
+              {token.word}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
 };
 
 // ============ 確認對話框元件 ============
@@ -137,34 +221,25 @@ const QuestionCanvas = ({
   useEffect(() => {
     const updateCanvasSize = () => {
       if (!containerRef.current) return;
-
       const containerWidth = containerRef.current.offsetWidth;
-
-      // ✅ 不要再 -32，外層容器已經有 padding 了
       const width = Math.min(containerWidth, CONFIG.canvas.maxWidth);
-
       const isMobile = width < 640;
       const layout = isMobile ? CONFIG.canvas.mobile : CONFIG.canvas.desktop;
-
       setCanvasLayout(layout);
       setCanvasSize({ width, height: layout.height });
     };
-
     updateCanvasSize();
     window.addEventListener("resize", updateCanvasSize);
     return () => window.removeEventListener("resize", updateCanvasSize);
   }, []);
 
-  // layout words -> positions
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
-
-    const width = canvasSize.width;
-    const height = canvasSize.height;
+    const { width, height } = canvasSize;
 
     canvas.width = width * dpr;
     canvas.height = height * dpr;
@@ -181,15 +256,13 @@ const QuestionCanvas = ({
 
     const words = material.text.match(/[^\s]+/g) || [];
     const positions = [];
-
-    let x = padding;
-    let y = padding;
+    let x = padding,
+      y = padding;
 
     words.forEach((word, index) => {
       const wordMatch = word.match(/^([a-zA-Z']+)(.*)$/);
       const pureWord = wordMatch ? wordMatch[1] : word;
       const punctuation = wordMatch ? wordMatch[2] : "";
-
       const wordWidth = ctx.measureText(word + " ").width;
       const pureWordWidth = ctx.measureText(pureWord).width;
 
@@ -208,18 +281,15 @@ const QuestionCanvas = ({
         height: fontSize,
         index,
       });
-
       x += wordWidth;
     });
 
     setWordPositions(positions);
   }, [material.text, canvasSize, canvasLayout]);
 
-  // draw
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext("2d");
     const { fontSize } = canvasLayout;
 
@@ -229,13 +299,10 @@ const QuestionCanvas = ({
 
     wordPositions.forEach((pos) => {
       const isSelected = selectedWords.has(pos.index);
-
       ctx.fillStyle = isSelected
         ? CONFIG.colors.selectedText
         : CONFIG.colors.normalText;
-
       ctx.fillText(pos.pureWord, pos.x, pos.y);
-
       if (pos.punctuation) {
         ctx.fillStyle = CONFIG.colors.normalText;
         ctx.fillText(pos.punctuation, pos.x + pos.width, pos.y);
@@ -246,7 +313,6 @@ const QuestionCanvas = ({
   const handleCanvasClick = (e) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -269,25 +335,21 @@ const QuestionCanvas = ({
     }
   };
 
-  const getSelectedWordsList = () => {
-    return Array.from(selectedWords)
+  const getSelectedWordsList = () =>
+    Array.from(selectedWords)
       .sort((a, b) => a - b)
-      .map((index) => wordPositions[index]?.pureWord)
+      .map((i) => wordPositions[i]?.pureWord)
       .filter(Boolean);
-  };
 
   const submitPayload = () => ({
-    materialId: material.id,
+    id: material.id,
     selectedWords: getSelectedWordsList(),
     completed: true,
   });
 
   return (
     <div className="space-y-4">
-      {/* Header row */}
       <h2 className="text-xl font-bold text-slate-800">{material.title}</h2>
-
-      {/* Canvas */}
       <div
         ref={containerRef}
         className="border border-slate-200 rounded-xl p-2 sm:p-4 bg-white shadow-sm"
@@ -299,16 +361,13 @@ const QuestionCanvas = ({
           style={{ display: "block" }}
         />
       </div>
-
-      {/* Selected words */}
       {CONFIG.display.showSelectedWords && (
         <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
           <p className="text-sm font-semibold text-slate-700 mb-2">
             Selected words ({selectedWords.size})
           </p>
-
           {getSelectedWordsList().length > 0 ? (
-            <div className="text-slate-800 leading-relaxed flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
               {getSelectedWordsList().map((word, idx) => (
                 <span
                   key={idx}
@@ -325,8 +384,6 @@ const QuestionCanvas = ({
           )}
         </div>
       )}
-
-      {/* Submit button */}
       <div className="flex justify-end">
         <button
           onClick={() => setShowConfirm(true)}
@@ -335,7 +392,6 @@ const QuestionCanvas = ({
           {isLastQuestion ? "Submit →" : "Continue →"}
         </button>
       </div>
-
       <ConfirmDialog
         isOpen={showConfirm}
         isLastQuestion={isLastQuestion}
@@ -358,7 +414,6 @@ export default function PronounSelector({ iv1, onSubmit, onError }) {
   const materials = CONFIG.materials[iv1] || CONFIG.materials.independent;
   const total = CONFIG.question.totalQuestions;
   const currentMaterial = materials[currentQuestionIndex];
-
   const progressPct = ((currentQuestionIndex + 1) / total) * 100;
 
   const handleQuestionSubmit = async (result) => {
@@ -367,7 +422,6 @@ export default function PronounSelector({ iv1, onSubmit, onError }) {
 
     if (currentQuestionIndex < total - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
-      //   window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -386,26 +440,27 @@ export default function PronounSelector({ iv1, onSubmit, onError }) {
       <div className="max-w-4xl mx-auto">
         {/* Instructions */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-l-4 border-indigo-600">
-          <h1 className="text-2xl font-bold text-slate-800">Warm-up</h1>
+          <h1 className="text-2xl font-bold text-slate-800">
+            {"Instruction" /*Warm-up*/}
+          </h1>
           <p className="mt-2 text-slate-600 italic text-base sm:text-lg leading-normal">
-            Before the next task, we’ll do a brief mental focusing exercise to
-            clear your mind.
+            {/* Before the next task, we'll do a brief mental focusing exercise to
+            clear your mind. */}
           </p>
 
           <div className="mt-4 bg-slate-50 rounded-xl p-4 border border-slate-200">
             <ul className="space-y-3 text-slate-700 text-base sm:text-lg leading-normal">
               {CONFIG.question.instructionPoints.map((item, i) => (
-                <li key={i} className="flex gap-3 font-medium ">
+                <li key={i} className="flex gap-3 font-medium">
                   <span className="mt-2 w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0" />
 
                   {item.type === "examples" ? (
                     <div className="flex-1">
-                      <div className="font-semibold text-slate-800 mb-1">
+                      <div className="text-slate-800 mb-1">
                         Pronouns can be{" "}
                         <span className="text-indigo-700">singular</span> or{" "}
                         <span className="text-indigo-700">plural</span>.
                       </div>
-
                       <div className="grid gap-2 sm:grid-cols-2 mt-2">
                         <div className="rounded-lg border border-slate-200 bg-white p-3">
                           <div className="text-sm font-bold text-slate-800 mb-2">
@@ -425,7 +480,6 @@ export default function PronounSelector({ iv1, onSubmit, onError }) {
                             ))}
                           </div>
                         </div>
-
                         <div className="rounded-lg border border-slate-200 bg-white p-3">
                           <div className="text-sm font-bold text-slate-800 mb-2">
                             Plural{" "}
@@ -446,6 +500,8 @@ export default function PronounSelector({ iv1, onSubmit, onError }) {
                         </div>
                       </div>
                     </div>
+                  ) : item.type === "animated_example" ? (
+                    <AnimatedExample sentence={item.sentence} />
                   ) : (
                     <span className="flex-1">{item.text}</span>
                   )}

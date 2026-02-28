@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import FullscreenLoading from "./FullscreenLoading";
+
 // ============================================================
 // CONFIGURATION
 // ============================================================
@@ -19,13 +20,14 @@ const CONFIG = {
   },
   display: {
     showProgressBar: true,
-    itemsPerPage: 5, // 每頁顯示幾題
+    itemsPerPage: 5,
     enableSmoothScroll: true,
   },
 };
 
 // ============================================================
 // QUESTION DATA
+// Attention check items have isAttentionCheck: true and correctResponse
 // ============================================================
 const questionData = {
   independent: [
@@ -50,9 +52,12 @@ const questionData = {
       text: "Speaking up during a class (or a meeting) is not a problem for me.",
     },
     {
-      id: "SCS_IND_6",
-      text: "I act the same way no matter who I am with.",
+      id: "SCS_IND_ATTN",
+      text: 'Please select "Agree(6)" for this item.',
+      isAttentionCheck: true,
+      correctResponse: 6, // Agree
     },
+    { id: "SCS_IND_6", text: "I act the same way no matter who I am with." },
     {
       id: "SCS_IND_7",
       text: "I try to do what is best for me, regardless of how that might affect others.",
@@ -60,6 +65,7 @@ const questionData = {
     {
       id: "SCS_IND_8",
       text: "Being able to take care of myself is a primary concern for me.",
+      candidate: true,
     },
     {
       id: "SCS_IND_9",
@@ -74,10 +80,12 @@ const questionData = {
     {
       id: "SCS_INTER_2",
       text: "I have respect for the authority figures with whom I interact.",
+      candidate: true,
     },
     {
       id: "SCS_INTER_3",
       text: "I respect people who are modest about themselves.",
+      candidate: true,
     },
     {
       id: "SCS_INTER_4",
@@ -86,14 +94,18 @@ const questionData = {
     {
       id: "SCS_INTER_5",
       text: "I should take into consideration my parents' advice when making education/career plans.",
+      candidate: true,
     },
     {
       id: "SCS_INTER_6",
       text: "I feel my fate is intertwined with the fate of those around me.",
     },
+    { id: "SCS_INTER_7", text: "I feel good when I cooperate with others." },
     {
-      id: "SCS_INTER_7",
-      text: "I feel good when I cooperate with others.",
+      id: "SCS_INTER_ATTN",
+      text: 'Please select "Disagree(2)" for this item.',
+      isAttentionCheck: true,
+      correctResponse: 2, // Disagree
     },
     {
       id: "SCS_INTER_8",
@@ -106,6 +118,7 @@ const questionData = {
     {
       id: "SCS_INTER_10",
       text: "I will stay in a group if they need me, even when I am not happy with the group.",
+      candidate: true,
     },
     {
       id: "SCS_INTER_11",
@@ -138,20 +151,18 @@ const LikertItem = ({ question, value, onChange, questionNumber }) => {
         <span className="flex-shrink-0 mt-0.5 w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-semibold text-slate-700 text-sm">
           {questionNumber}
         </span>
-
-        <p className="flex-1 text-slate-900 font-medium text-[15px] leading-5.5 md:text-[16px] md:leading-7 tracking-[0.01em]">
+        <p className="flex-1 text-slate-900 font-medium text-[15px] leading-6 md:text-[16px] md:leading-7 tracking-[0.01em]">
           {question.text}
         </p>
       </div>
 
-      {/* Desktop: clean 1–7 row */}
-      <div className="hidden md:block">
+      {/* Scale buttons */}
+      <div>
         <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
           <span>Strongly Disagree</span>
           <span>Strongly Agree</span>
         </div>
-
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1.5 md:gap-2">
           {scaleValues.map((val) => {
             const selected = value === val;
             return (
@@ -160,67 +171,14 @@ const LikertItem = ({ question, value, onChange, questionNumber }) => {
                 type="button"
                 onClick={() => onChange(question.id, val)}
                 className={[
-                  "rounded-lg border px-2 py-3 transition-all",
-                  "hover:bg-slate-50",
+                  "rounded-lg border px-1 py-3 transition-all hover:bg-slate-50",
                   selected
                     ? "border-indigo-600 bg-indigo-50 ring-2 ring-indigo-200"
                     : "border-slate-200 bg-white",
                 ].join(" ")}
                 aria-pressed={selected}
               >
-                <div className="flex flex-col items-center gap-2">
-                  {/* radio dot */}
-                  <span
-                    className={[
-                      "w-4 h-4 rounded-full border flex items-center justify-center",
-                      selected ? "border-indigo-600" : "border-slate-300",
-                    ].join(" ")}
-                  >
-                    {selected && (
-                      <span className="w-2 h-2 rounded-full bg-indigo-600" />
-                    )}
-                  </span>
-
-                  {/* small number */}
-                  <span
-                    className={[
-                      "text-sm font-semibold",
-                      selected ? "text-indigo-700" : "text-slate-700",
-                    ].join(" ")}
-                  >
-                    {val}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Mobile: minimal vertical list */}
-      <div className="md:hidden">
-        <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
-          <span className="w-[10ch]">Strongly Disagree</span>
-          <span className="w-[10ch] text-right">Strongly Agree</span>
-        </div>
-
-        <div className="grid grid-cols-7 gap-2">
-          {scaleValues.map((val) => {
-            const selected = value === val;
-            return (
-              <button
-                key={val}
-                type="button"
-                onClick={() => onChange(question.id, val)}
-                className={[
-                  "rounded-lg border px-2 py-3 transition-all",
-                  selected
-                    ? "border-indigo-600 bg-indigo-50 ring-2 ring-indigo-200"
-                    : "border-slate-200 bg-white",
-                ].join(" ")}
-                aria-pressed={selected}
-              >
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col items-center gap-1.5">
                   <span
                     className={[
                       "w-4 h-4 rounded-full border flex items-center justify-center",
@@ -271,33 +229,26 @@ export default function SCSScale({ order = "ind_first", onSubmit, onError }) {
   const currentQuestions = questions.slice(startIndex, endIndex);
 
   const handleResponseChange = (questionId, value) => {
-    setResponses((prev) => ({
-      ...prev,
-      [questionId]: value,
-    }));
+    setResponses((prev) => ({ ...prev, [questionId]: value }));
   };
 
-  const areCurrentPageAnswersFilled = () => {
-    return currentQuestions.every((q) => responses[q.id] !== undefined);
-  };
+  const areCurrentPageAnswersFilled = () =>
+    currentQuestions.every((q) => responses[q.id] !== undefined);
 
   const handleNext = async () => {
     if (!areCurrentPageAnswersFilled()) return;
 
     if (currentPage < totalPages - 1) {
       setCurrentPage((prev) => prev + 1);
-      if (CONFIG.display.enableSmoothScroll) {
+      if (CONFIG.display.enableSmoothScroll)
         setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
-      }
     } else {
-      // Submit to backend
       setIsSubmitting(true);
       try {
         const likertAnswers = questions.map((q) => ({
           id: q.id,
           response: responses[q.id],
         }));
-
         await onSubmit({ likertAnswers });
       } catch (error) {
         onError?.(error);
@@ -309,9 +260,8 @@ export default function SCSScale({ order = "ind_first", onSubmit, onError }) {
   const handlePrevious = () => {
     if (currentPage > 0) {
       setCurrentPage((prev) => prev - 1);
-      if (CONFIG.display.enableSmoothScroll) {
+      if (CONFIG.display.enableSmoothScroll)
         setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
-      }
     }
   };
 
@@ -324,7 +274,7 @@ export default function SCSScale({ order = "ind_first", onSubmit, onError }) {
         {/* Instructions */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border-l-4 border-purple-600">
           <h1 className="text-2xl font-bold text-slate-800 mb-4">
-            Part 1: Questionnaire
+            Questionnaire
           </h1>
           <div className="text-slate-700 space-y-2 leading-relaxed">
             <p>
@@ -333,7 +283,7 @@ export default function SCSScale({ order = "ind_first", onSubmit, onError }) {
               statements using the scale below:
             </p>
             <div className="bg-slate-50 rounded-lg p-4 mt-3">
-              {/* 手機：可橫向滑動，保留完整 1–7 + 全部 label */}
+              {/* Mobile: scrollable */}
               <div className="sm:hidden overflow-x-auto">
                 <div className="min-w-[720px]">
                   <div className="grid grid-cols-7 gap-2 text-center">
@@ -353,8 +303,7 @@ export default function SCSScale({ order = "ind_first", onSubmit, onError }) {
                   </div>
                 </div>
               </div>
-
-              {/* 平板/桌機：固定 7 欄 */}
+              {/* Desktop */}
               <div className="hidden sm:grid grid-cols-7 gap-2 text-center text-sm">
                 {Array.from({ length: 7 }, (_, i) => i + 1).map((n) => (
                   <div key={n}>

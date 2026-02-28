@@ -45,7 +45,6 @@ const PIPELINE = {
       id: "stage_2",
       active: true,
       variant: {
-        queryKey: "stage2Task",
         mode: "balanced",
         value: ["inter_first", "ind_first"],
       },
@@ -63,6 +62,16 @@ const PIPELINE = {
 };
 
 const STAGES = PIPELINE.stages.filter((s) => s.active !== false);
+
+// ─────────────────────────────────────────
+// Prolific Redirect URLs
+// ─────────────────────────────────────────
+const PROLIFIC_COMPLETE_URL =
+  "https://app.prolific.com/submissions/complete?cc=C6SKG6JG";
+const PROLIFIC_FAIL_URL =
+  "https://app.prolific.com/submissions/complete?cc=C83U7PTM";
+const PROLIFIC_NOCONSENT_URL =
+  "https://app.prolific.com/submissions/complete?cc=C17N0WEM";
 
 // ─────────────────────────────────────────
 // Static Data
@@ -117,30 +126,36 @@ const SCRAMBLE_ANSWER_KEY = {
 const MATERIALS = {
   independent: [
     {
-      materialId: "material1_independent",
-      text: "On Friday, my weekend looks free, so I plan a short trip for myself. After I check my budget, I choose my own route and pick a place that feels unique and different to me. To keep my autonomy, I leave my schedule loose and keep my options separate and apart. At the map, I compare routes and choose the route that fits my pace. If a new idea appears, I diverge and adjust quickly. With my bag ready, I head out alone and enjoy my solitude. By the end, I feel calm and refreshed, and I like the sense of freedom in my choices.",
+      id: "PRON_IND_1",
+      title: "Task I",
+      text: "On Friday afternoon, my work queue becomes open, and I review my tasks before I begin. After I check my schedule, I choose my own order and move my highest priority item to the top. My focus stays on my goal, so I keep my options separate and apart while I compare deadlines. If a new request appears, I pause, diverge from my first order, and adjust my plan for my pace and for me. A clear list helps me track my progress, and I mark my completed steps in my notebook. Near the end, I return to my first priority and finish my remaining work. By the end, I feel calm and focused, and my work choices give me a clear sense of freedom.",
     },
     {
-      materialId: "material2_independent",
-      text: "Before I start the assignment, my notes spread across my desk, and my outline stays open. After a quick scan, I choose my own angle and keep my argument distinct and different. To stay free to revise, I build a simple checklist and write my introduction in my own words. As my draft grows, I separate each section and refine my transitions until my logic feels clear to me. When a sentence sounds weak, I rewrite the sentence and stay assertive about my choices. Near the end, I check my citations and my formatting, then I submit my final file. The assignment earns a high score, and my independent approach supports my result.",
+      id: "PRON_IND_2",
+      title: "Task II",
+      text: "Before I start the report, I review my source list and mark my key points in my notebook. After a quick scan, I choose my own angle and keep my argument distinct and different. To stay free to revise, I build a simple checklist and write my opening paragraph in my own words. As my draft grows, I separate each section and refine my transitions until my logic feels clear to me. When a sentence sounds weak, I rewrite the sentence and stay assertive about my choices, and my checklist helps me keep my structure consistent. Near the end, I check my citations and my formatting, then I submit my final file. The report earns a high evaluation, and my own approach supports my result for me.",
     },
     {
-      materialId: "material3_independent",
-      text: "On Saturday, my short trip begins with a quiet train ride, and I keep my bag close. A new neighborhood feels different from my usual streets, so I follow my curiosity and choose my own pace. At a small shop, my attention moves to a unique local snack, and I decide to try my favorite flavor. A narrow side road looks less crowded, so I turn apart from the main path and enjoy being alone. The moment brings a sense of freedom, and my autonomy feels natural. Later, I sit at a corner table and write a few notes in my notebook. By the end, my solitude feels calm, and I like how my choices stay mine.",
+      id: "PRON_IND_3",
+      title: "Task III",
+      text: "On Monday, my project review begins in a meeting room, and I open my notes before my update. After a quick scan, I choose my own order and keep my main points distinct and clear. During my review, I explain my decisions in my own words and stay assertive about my choices. If a new question appears, I pause, compare options, and adjust my response for my pace and for me. After my review, I return to my desk and record my next steps in my notebook, and my notes stay with me for my next task. Near the end of my workday, I check my task list and organize my materials. By the end, I feel steady and clear, and I like how my work choices stay mine.",
     },
   ],
   interdependent: [
     {
-      materialId: "material1_interdependent",
-      text: "On Friday, our weekend looks open, so we plan a short trip together. After we check our budget, we choose our shared route and pick a place that feels similar for us. To stay connected, we keep our schedule flexible and share our options in partnership. At the map, we compare routes and choose the route that fits our group pace. If a new idea appears, we agree and adjust quickly, then we keep our plan cohesive. With our bags ready, we head out together and enjoy our closeness. By the end, we feel warm and relaxed, and we like the feeling of connection in our time together.",
+      id: "PRON_INTER_1",
+      title: "Task I",
+      text: "On Friday afternoon, our work queue becomes open, and we review our tasks before we begin. After we check our schedule, we choose our shared order and move our highest priority item to the top. Our focus stays on our goal, so we keep our options connected while we compare deadlines. If a new request appears, we pause, agree on a new order, and adjust our plan for our pace and for us. A clear list helps us track our progress, and we mark our completed steps in our notebook. Near the end, we return to our first priority and finish our remaining work. By the end, we feel calm and focused, and our work choices give us a clear sense of connection.",
     },
     {
-      materialId: "material2_interdependent",
-      text: "Before we start the assignment, our notes spread across the desk, and our outline stays open. After a quick scan, we choose our shared angle and keep our argument similar across our sections. To work together, we build a simple checklist and write our introduction in our shared voice. As our draft grows, we connect each section and revise with overlap across our edits. When a sentence sounds weak, we rewrite the sentence and stay cooperative and agreeable. Near the end, we check our citations and our formatting, then we submit our final file. The assignment earns a high score, and our interdependent teamwork supports our result.",
+      id: "PRON_INTER_2",
+      title: "Task II",
+      text: "Before we start the report, we review our source list and mark our key points in our notebook. After a quick scan, we choose our shared angle and keep our argument similar across our sections. To work together, we build a simple checklist and write our opening paragraph in our shared voice. As our draft grows, we connect each section and revise with overlap across our edits until our logic feels clear to us. When a sentence sounds weak, we rewrite the sentence and stay cooperative and agreeable, and our checklist helps us keep our structure consistent. Near the end, we check our citations and our formatting, then we submit our final file. The report earns a high evaluation, and our shared teamwork supports our result for us.",
     },
     {
-      materialId: "material3_interdependent",
-      text: "On Saturday, our short trip begins with a quiet train ride, and we keep our bags close. A new neighborhood feels different from our usual streets, so we stay together and choose our shared pace. At a small shop, our attention moves to a local snack, and we share our favorite flavor. A narrow side road looks less crowded, so we turn together and keep our group close. The moment brings a sense of connection, and our partnership feels natural. Later, we sit at a corner table and write a few notes in our notebook. By the end, our closeness feels calm, and we like our time together.",
+      id: "PRON_INTER_3",
+      title: "Task III",
+      text: "On Monday, our project review begins in a meeting room, and we open our notes before our update. After a quick scan, we choose our shared order and keep our main points connected and clear. During our review, we explain our decisions in our shared voice and stay cooperative and agreeable in our choices. If a new question appears, we pause, compare options, and adjust our response for our pace and for us. After our review, we return to our work area and record our next steps in our notebook, and our notes stay with us for our next task. Near the end of our workday, we check our task list and organize our materials. By the end, we feel steady and clear, and we like our work time together.",
     },
   ],
 };
@@ -191,20 +206,56 @@ function assignIV() {
 }
 
 // ─────────────────────────────────────────
+// Cleanup abandoned sessions (called on every /api/init)
+// In-progress sessions with updated_at older than ABANDON_TIMEOUT_MINUTES
+// are marked failed so they stop occupying balance slots.
+// ─────────────────────────────────────────
+const ABANDON_TIMEOUT_MINUTES = 30;
+
+async function cleanupAbandoned() {
+  const cutoff = new Date(
+    Date.now() - ABANDON_TIMEOUT_MINUTES * 60 * 1000,
+  ).toISOString();
+
+  const { error } = await supabase
+    .from("progress")
+    .update({
+      failed: true,
+      failed_reason: {
+        reason: "timeout",
+        cutoff_minutes: ABANDON_TIMEOUT_MINUTES,
+      },
+      updated_at: nowIso(),
+    })
+    .eq("pipeline_code", PIPELINE.code)
+    .eq("completed", false)
+    .eq("failed", false)
+    .lt("updated_at", cutoff);
+
+  if (error) console.error("cleanupAbandoned error:", error.message);
+}
+
+// ─────────────────────────────────────────
 // Balanced Variant Picker
+//
+// Queries progress table directly — no join to submissions needed.
+// Counts all rows where failed=false (i.e. completed + genuinely in-progress).
+// Abandoned sessions are cleaned up before this runs, so failed=false
+// reliably reflects only active participants.
 // ─────────────────────────────────────────
 async function balancedPick(stageId, variants) {
   const { data, error } = await supabase
-    .from("submissions")
-    .select("variant_id")
+    .from("progress")
+    .select("stage_variants")
     .eq("pipeline_code", PIPELINE.code)
-    .eq("stage_id", stageId);
+    .eq("failed", false);
 
   if (error) throw error;
 
   const count = Object.fromEntries(variants.map((v) => [v, 0]));
   for (const row of data ?? []) {
-    if (count[row.variant_id] !== undefined) count[row.variant_id] += 1;
+    const v = row.stage_variants?.[stageId];
+    if (v && count[v] !== undefined) count[v]++;
   }
 
   let min = Infinity;
@@ -234,7 +285,7 @@ const PRONOUN_TRUTH = (() => {
     const set = PRONOUNS[iv1];
     for (const m of MATERIALS[iv1]) {
       const truthList = tokens(m.text).filter((t) => set.has(t));
-      out[iv1].set(m.materialId, {
+      out[iv1].set(m.id, {
         truthCounts: makeCounts(truthList),
         truthTotal: truthList.length,
       });
@@ -269,17 +320,17 @@ function stage1_pronoun_f1(ctx, answers) {
     return m;
   };
 
-  const threshold = 0;
+  const threshold = 0.5;
 
   const perItem = items.map((it) => {
     const completed = it.completed === true;
-    const truth = PRONOUN_TRUTH[iv1].get(it.materialId);
+    const truth = PRONOUN_TRUTH[iv1].get(it.id);
     if (!truth) {
       return {
-        materialId: it.materialId ?? null,
+        id: it.id ?? null,
         completed,
         passed: false,
-        reason: "materialId not found",
+        reason: "id not found",
       };
     }
 
@@ -306,7 +357,7 @@ function stage1_pronoun_f1(ctx, answers) {
     const round3 = (n) => Math.round(n * 1000) / 1000;
 
     return {
-      materialId: it.materialId,
+      id: it.id,
       completed,
       expectedCount: totalTruth,
       selectedCount: totalSel,
@@ -352,7 +403,7 @@ function stage1_scramble_50(ctx, answers) {
     total === 0 ? 0 : Math.round((correct / total) * 10000) / 100;
 
   return {
-    passed: accuracy >= 0,
+    passed: accuracy >= 50,
     verdict: {
       kind: "stage1_scramble_50",
       iv1: ctx.iv1,
@@ -362,6 +413,18 @@ function stage1_scramble_50(ctx, answers) {
 }
 
 function stage2_likert_complete_both(ctx, answers) {
+  // ── Attention check config ──────────────────────────────────
+  // mode: "any"  → fail if ANY attention check is wrong
+  //       "both" → fail only if BOTH attention checks are wrong
+  const ATTN_CHECK_MODE = "any";
+
+  const ATTN_CHECKS = [
+    { id: "SCS_IND_ATTN", correctResponse: 6 }, // "Please select Agree"
+    { id: "SCS_INTER_ATTN", correctResponse: 2 }, // "Please select Disagree"
+  ];
+  const ATTN_IDS = new Set(ATTN_CHECKS.map((a) => a.id));
+  // ───────────────────────────────────────────────────────────
+
   const items = answers?.likertAnswers;
   if (!Array.isArray(items)) throw new Error("likertAnswers must be an array");
 
@@ -370,7 +433,11 @@ function stage2_likert_complete_both(ctx, answers) {
     { length: 13 },
     (_, i) => `SCS_INTER_${i + 1}`,
   );
-  const expectedAll = [...expectedInd, ...expectedInter];
+  const expectedAll = [
+    ...expectedInd,
+    ...expectedInter,
+    ...ATTN_CHECKS.map((a) => a.id),
+  ];
   const expectedSet = new Set(expectedAll);
 
   const invalid = items.filter(
@@ -409,12 +476,42 @@ function stage2_likert_complete_both(ctx, answers) {
   }
 
   const byId = new Map(items.map((x) => [x.id, x.response]));
+
+  // ── Attention check validation ──────────────────────────────
+  const attnResults = ATTN_CHECKS.map((a) => ({
+    id: a.id,
+    expected: a.correctResponse,
+    actual: byId.get(a.id),
+    passed: byId.get(a.id) === a.correctResponse,
+  }));
+
+  const attnFailed = attnResults.filter((r) => !r.passed);
+  const attnFail =
+    ATTN_CHECK_MODE === "any"
+      ? attnFailed.length > 0 // any wrong → fail
+      : attnFailed.length === ATTN_CHECKS.length; // all wrong → fail
+
+  if (attnFail) {
+    return {
+      passed: false,
+      verdict: {
+        kind: "stage2_likert_complete_both",
+        reason: "Failed attention check",
+        attn_check_mode: ATTN_CHECK_MODE,
+        attn_results: attnResults,
+      },
+    };
+  }
+  // ───────────────────────────────────────────────────────────
+
+  // ── Mean calculation (exclude attention check items) ────────
   const mean = (ids) =>
     ids.reduce((acc, id) => acc + (byId.get(id) ?? 0), 0) / ids.length;
   const round2 = (n) => Math.round(n * 100) / 100;
 
-  const meanIndependent = mean(expectedInd);
-  const meanInterdependent = mean(expectedInter);
+  const meanIndependent = mean(expectedInd); // SCS_IND_1..9 only
+  const meanInterdependent = mean(expectedInter); // SCS_INTER_1..13 only
+  // ───────────────────────────────────────────────────────────
 
   const iv1 = ctx?.iv1;
   let manipulationSuccess = null;
@@ -480,6 +577,7 @@ async function pickVariant(stage, query = {}) {
     if (q && all.map(norm).includes(q))
       variantId = all.find((v) => norm(v) === q);
   }
+
   if (!variantId) {
     if (cfg.mode === "random") variantId = rnd(all);
     else if (cfg.mode === "balanced")
@@ -536,8 +634,14 @@ const apiRouter = express.Router();
 // POST /api/init
 apiRouter.post("/init", async (req, res) => {
   try {
-    let prolificId = req.body?.prolificId;
-    if (!prolificId) prolificId = newId();
+    // 清掉超時的 in-progress session，確保 balancedPick 計數準確
+    await cleanupAbandoned();
+
+    const prolificId = req.body?.prolificId;
+    if (!prolificId)
+      return res
+        .status(400)
+        .json({ ok: false, message: "prolificId required" });
 
     await supabase.from("participants").upsert({ prolific_id: prolificId });
 
@@ -576,7 +680,12 @@ apiRouter.post("/init", async (req, res) => {
     }
 
     if (prog.completed)
-      return res.json({ ok: true, prolificId, completed: true });
+      return res.json({
+        ok: true,
+        prolificId,
+        completed: true,
+        redirectUrl: PROLIFIC_COMPLETE_URL,
+      });
     if (prog.failed)
       return res.json({
         ok: true,
@@ -584,6 +693,7 @@ apiRouter.post("/init", async (req, res) => {
         failed: true,
         failed_stage_id: prog.failed_stage_id,
         failed_reason: prog.failed_reason,
+        redirectUrl: PROLIFIC_FAIL_URL,
       });
 
     // 一次鎖定所有 stage variant（已鎖定的不會被覆蓋）
@@ -602,7 +712,12 @@ apiRouter.post("/init", async (req, res) => {
         .eq("pipeline_code", PIPELINE.code)
         .eq("prolific_id", prolificId);
       if (up.error) throw up.error;
-      return res.json({ ok: true, prolificId, completed: true });
+      return res.json({
+        ok: true,
+        prolificId,
+        completed: true,
+        redirectUrl: PROLIFIC_COMPLETE_URL,
+      });
     }
 
     const variantId = stage_variants[stage.id];
@@ -642,6 +757,7 @@ apiRouter.get("/current-stage", async (req, res) => {
         failed: true,
         failed_stage_id: prog.failed_stage_id,
         failed_reason: prog.failed_reason,
+        redirectUrl: PROLIFIC_FAIL_URL,
       });
 
     const stage = stageAt(prog.current_stage_index);
@@ -744,13 +860,10 @@ apiRouter.post("/submit", async (req, res) => {
       stage_id: stageId,
       variant_id: variantId,
       prolific_id: prolificId,
-      iv1: prog.iv1,
-      iv2: prog.iv2,
       answers,
       passed,
       verdict,
       stage_seconds: stageSeconds,
-      total_seconds: totalSeconds,
     });
     if (ins.error) throw ins.error;
 
@@ -767,7 +880,13 @@ apiRouter.post("/submit", async (req, res) => {
         .eq("pipeline_code", PIPELINE.code)
         .eq("prolific_id", prolificId);
       if (up.error) throw up.error;
-      return res.json({ ok: true, passed: false, lockedOut: true, verdict });
+      return res.json({
+        ok: true,
+        passed: false,
+        lockedOut: true,
+        verdict,
+        redirectUrl: PROLIFIC_FAIL_URL,
+      });
     }
 
     // Advance stage or complete
@@ -792,11 +911,56 @@ apiRouter.post("/submit", async (req, res) => {
       passed: true,
       completed: done,
       nextStageId: done ? null : STAGES[nextIndex].id,
+      redirectUrl: done ? PROLIFIC_COMPLETE_URL : null,
       verdict,
     });
   } catch (e) {
     return res.status(500).json({ ok: false, message: e.message });
   }
+});
+
+// GET /api/decline-url  — 給 consent 頁面拒絕時導轉用
+apiRouter.get("/decline-url", (_, res) => {
+  res.json({ ok: true, redirectUrl: PROLIFIC_NOCONSENT_URL });
+});
+
+// ─────────────────────────────────────────
+// Router: /admin
+// ─────────────────────────────────────────
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "changeme";
+
+function requireAdminPassword(req, res, next) {
+  const pwd = req.headers["x-admin-password"] ?? req.query?.pwd;
+  if (pwd !== ADMIN_PASSWORD) {
+    return res.status(401).json({ ok: false, message: "Unauthorized" });
+  }
+  next();
+}
+
+const adminRouter = express.Router();
+
+// GET /admin/api/summary?pipeline=study_v1
+adminRouter.get("/api/summary", requireAdminPassword, async (req, res) => {
+  try {
+    const pipeline = req.query?.pipeline ?? PIPELINE.code;
+    const { data, error } = await supabase
+      .from("admin_summary")
+      .select("*")
+      .eq("pipeline_code", pipeline)
+      .order("started_at", { ascending: false });
+
+    if (error) throw error;
+    return res.json({ ok: true, data });
+  } catch (e) {
+    return res.status(500).json({ ok: false, message: e.message });
+  }
+});
+
+// GET /admin  →  serve the admin HTML UI
+adminRouter.get("/", (req, res) => {
+  const __filename2 = fileURLToPath(import.meta.url);
+  const __dirname2 = path.dirname(__filename2);
+  res.sendFile(path.join(__dirname2, "admin.html"));
 });
 
 // ─────────────────────────────────────────
@@ -805,6 +969,7 @@ apiRouter.post("/submit", async (req, res) => {
 const app = express();
 app.use(express.json());
 app.use("/api", apiRouter);
+app.use("/admin", adminRouter);
 app.get("/health", (_, res) => res.json({ ok: true }));
 
 const __filename = fileURLToPath(import.meta.url);
@@ -812,7 +977,7 @@ const __dirname = path.dirname(__filename);
 const clientDistPath = path.join(__dirname, "..", "client", "dist");
 
 app.use(express.static(clientDistPath));
-app.get(/^(?!\/api).*/, (_req, res) =>
+app.get(/^(?!\/api|\/admin).*/, (_req, res) =>
   res.sendFile(path.join(clientDistPath, "index.html")),
 );
 

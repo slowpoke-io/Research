@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import FullscreenLoading from "./FullscreenLoading";
 
 // ============================================================
@@ -21,6 +21,17 @@ const CONFIG = {
 };
 
 // ============================================================
+// EXAMPLE ITEM (neutral, shown in instructions)
+// words: the sky is blue and very cold tall
+// valid sentence: "The sky is blue and very cold" → leftover: "tall"
+// ============================================================
+const EXAMPLE = {
+  words: ["the", "is", "blue", "sky", "very", "tall"],
+  answer: "tall", // correct leftover word
+  sentence: "The sky is very blue.",
+};
+
+// ============================================================
 // SCRAMBLE DATA
 // ============================================================
 const scrambleData = {
@@ -29,26 +40,11 @@ const scrambleData = {
       id: 1,
       question: ["unlike", "I", "act", "on my own", "others", "dissimilar"],
     },
-    {
-      id: 2,
-      question: ["solely", "I", "rely", "on", "different", "myself"],
-    },
-    {
-      id: 3,
-      question: ["I", "do not", "others", "care about", "mine"],
-    },
-    {
-      id: 4,
-      question: ["unique", "disconnect", "that", "feel", "I", "I am"],
-    },
-    {
-      id: 5,
-      question: ["me", "person", "I'm", "competitive", "a", "very"],
-    },
-    {
-      id: 6,
-      question: ["different", "books", "reading", "I", "like", "life"],
-    },
+    { id: 2, question: ["solely", "I", "rely", "on", "different", "myself"] },
+    { id: 3, question: ["I", "do not", "others", "care about", "mine"] },
+    { id: 4, question: ["unique", "disconnect", "that", "feel", "I", "I am"] },
+    { id: 5, question: ["me", "person", "I'm", "competitive", "a", "very"] },
+    { id: 6, question: ["different", "books", "reading", "I", "like", "life"] },
     {
       id: 7,
       question: ["individual", "I am", "others", "from", "independent"],
@@ -61,10 +57,7 @@ const scrambleData = {
       id: 9,
       question: ["others", "being free", "from", "I", "like", "independence"],
     },
-    {
-      id: 10,
-      question: ["opinions", "my", "difference", "unusual", "are"],
-    },
+    { id: 10, question: ["opinions", "my", "difference", "unusual", "are"] },
     {
       id: 11,
       question: [
@@ -94,14 +87,8 @@ const scrambleData = {
       id: 14,
       question: ["very", "watching", "I", "like", "nature", "beautiful"],
     },
-    {
-      id: 15,
-      question: ["boring", "I", "often", "good", "tasks", "avoid"],
-    },
-    {
-      id: 16,
-      question: ["my", "distinct", "autonomy", "interests", "are"],
-    },
+    { id: 15, question: ["boring", "I", "often", "good", "tasks", "avoid"] },
+    { id: 16, question: ["my", "distinct", "autonomy", "interests", "are"] },
     {
       id: 17,
       question: [
@@ -132,10 +119,7 @@ const scrambleData = {
       id: 1,
       question: ["we", "agree", "always", "with each other", "together"],
     },
-    {
-      id: 2,
-      question: ["our", "company", "similar", "views", "are"],
-    },
+    { id: 2, question: ["our", "company", "similar", "views", "are"] },
     {
       id: 3,
       question: ["than", "others", "more", "cooperative", "we are", "group"],
@@ -155,29 +139,14 @@ const scrambleData = {
         "we",
       ],
     },
-    {
-      id: 6,
-      question: ["similar", "reading", "we", "like", "books", "life"],
-    },
-    {
-      id: 7,
-      question: ["much", "connected", "for", "us", "means", "group"],
-    },
-    {
-      id: 8,
-      question: ["community", "we", "belong", "membership", "a", "to"],
-    },
-    {
-      id: 9,
-      question: ["for", "we can", "harmony", "sacrifice", "the group"],
-    },
-    {
-      id: 10,
-      question: ["our", "group", "matters", "most", "joint"],
-    },
+    { id: 6, question: ["similar", "reading", "we", "like", "books", "life"] },
+    { id: 7, question: ["much", "connected", "for", "us", "means", "group"] },
+    { id: 8, question: ["community", "we", "belong", "membership", "a", "to"] },
+    { id: 9, question: ["for", "we can", "harmony", "sacrifice", "the group"] },
+    { id: 10, question: ["our", "group", "matters", "most", "joint"] },
     {
       id: 11,
-      question: ["in many matters", "we", "team", "join", "as", "ours"],
+      question: ["in many matters", "we", "a team", "join", "as", "ours"],
     },
     {
       id: 12,
@@ -191,10 +160,7 @@ const scrambleData = {
       id: 14,
       question: ["very", "watching", "we", "like", "nature", "beautiful"],
     },
-    {
-      id: 15,
-      question: ["boring", "often", "good", "tasks", "we", "avoid"],
-    },
+    { id: 15, question: ["boring", "often", "good", "tasks", "we", "avoid"] },
     {
       id: 16,
       question: ["we", "willingly", "always", "help", "each other", "our"],
@@ -225,12 +191,54 @@ const scrambleData = {
       id: 19,
       question: ["always", "integrated", "support", "team", "we", "our"],
     },
-    {
-      id: 20,
-      question: ["us", "we", "act", "together", "often"],
-    },
+    { id: 20, question: ["us", "we", "act", "together", "often"] },
   ],
 };
+
+// ============================================================
+// EXAMPLE DEMO (interactive, inside instructions)
+// ============================================================
+function ExampleDemo() {
+  return (
+    <div className="mt-4 bg-slate-50 rounded-xl border border-slate-200 p-5">
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+        Example
+      </p>
+
+      {/* Word chips */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {EXAMPLE.words.map((word) => (
+          <span
+            key={word}
+            className={`px-4 py-2 rounded-lg font-medium border shadow-sm text-sm ${
+              word === EXAMPLE.answer
+                ? "bg-indigo-500 text-white border-indigo-600 shadow-md"
+                : "bg-white text-slate-800 border-slate-300"
+            }`}
+          >
+            {word}
+          </span>
+        ))}
+      </div>
+
+      {/* Explanation */}
+      <div className="flex items-start gap-2 text-sm text-slate-600 bg-white rounded-lg p-3 border border-slate-200">
+        <span className="font-bold text-indigo-500 text-base leading-none mt-0.5">
+          ✓
+        </span>
+        <div>
+          The correct sentence is:{" "}
+          <span className="italic">"{EXAMPLE.sentence}"</span> — the leftover
+          word is{" "}
+          <span className="font-semibold text-indigo-600">
+            "{EXAMPLE.answer}"
+          </span>
+          .
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ============================================================
 // COMPONENT
@@ -250,94 +258,67 @@ export default function Scramble({ iv1, onSubmit, onError }) {
 
   const handleAnswerChange = (itemId, value) => {
     setAnswers((prev) => ({ ...prev, [itemId]: value }));
-    if (errors[itemId]) {
-      setErrors((prev) => ({ ...prev, [itemId]: null }));
-    }
+    if (errors[itemId]) setErrors((prev) => ({ ...prev, [itemId]: null }));
   };
 
   const handleWordClick = (itemId, word) => {
-    if (answers[itemId] === word) {
-      handleAnswerChange(itemId, "");
-    } else {
-      handleAnswerChange(itemId, word);
-    }
+    handleAnswerChange(itemId, answers[itemId] === word ? "" : word);
   };
 
   const validateAnswer = (itemId, answer) => {
     const item = items.find((i) => i.id === itemId);
     if (!item) return true;
 
-    let processedAnswer = answer;
-    if (CONFIG.validation.trimWhitespace) {
-      processedAnswer = processedAnswer.trim();
-    }
-    if (CONFIG.validation.caseInsensitive) {
-      processedAnswer = processedAnswer.toLowerCase();
-    }
-
-    if (processedAnswer === "") return true;
+    let processed = answer;
+    if (CONFIG.validation.trimWhitespace) processed = processed.trim();
+    if (CONFIG.validation.caseInsensitive) processed = processed.toLowerCase();
+    if (processed === "") return true;
 
     const isValid = item.question.some((word) => {
-      let processedWord = word;
-      if (CONFIG.validation.caseInsensitive) {
-        processedWord = processedWord.toLowerCase();
-      }
-      return processedWord === processedAnswer;
+      let w = word;
+      if (CONFIG.validation.caseInsensitive) w = w.toLowerCase();
+      return w === processed;
     });
 
-    if (!isValid) {
+    if (!isValid)
       setErrors((prev) => ({
         ...prev,
         [itemId]: `"${answer.trim()}" is not in the word list for this item.`,
       }));
-    }
 
     return isValid;
   };
 
   const handleBlur = (itemId) => {
     const answer = answers[itemId];
-    if (answer && answer.trim()) {
-      validateAnswer(itemId, answer);
-    }
+    if (answer && answer.trim()) validateAnswer(itemId, answer);
   };
 
-  const areCurrentPageAnswersFilled = () => {
-    return currentItems.every((item) => {
-      const answer = answers[item.id];
-      return answer && answer.trim().length > 0;
-    });
-  };
+  const areCurrentPageAnswersFilled = () =>
+    currentItems.every((item) => answers[item.id]?.trim().length > 0);
 
   const areCurrentPageAnswersValid = () => {
     if (!areCurrentPageAnswersFilled()) return false;
     return currentItems.every((item) => {
-      const answer = answers[item.id];
-      if (!answer || !answer.trim()) return false;
-      const trimmedAnswer = answer.trim().toLowerCase();
-      return item.question.some((word) => word.toLowerCase() === trimmedAnswer);
+      const trimmed = answers[item.id]?.trim().toLowerCase();
+      return item.question.some((w) => w.toLowerCase() === trimmed);
     });
   };
 
   const handleNext = async () => {
-    // Validate current page
     let hasErrors = false;
     currentItems.forEach((item) => {
       const answer = answers[item.id];
       if (answer && answer.trim()) {
-        if (!validateAnswer(item.id, answer)) {
-          hasErrors = true;
-        }
+        if (!validateAnswer(item.id, answer)) hasErrors = true;
       }
     });
-
     if (hasErrors) return;
 
     if (currentPage < totalPages - 1) {
       setCurrentPage((prev) => prev + 1);
-      if (CONFIG.display.enableSmoothScroll) {
+      if (CONFIG.display.enableSmoothScroll)
         setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
-      }
     } else {
       setIsSubmitting(true);
       try {
@@ -345,7 +326,6 @@ export default function Scramble({ iv1, onSubmit, onError }) {
           id: item.id,
           answer: answers[item.id]?.trim() || "",
         }));
-
         await onSubmit({ scrambleAnswers: submissionData });
       } catch (error) {
         onError?.(error);
@@ -358,9 +338,8 @@ export default function Scramble({ iv1, onSubmit, onError }) {
   const handlePrevious = () => {
     if (currentPage > 0) {
       setCurrentPage((prev) => prev - 1);
-      if (CONFIG.display.enableSmoothScroll) {
+      if (CONFIG.display.enableSmoothScroll)
         setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
-      }
     }
   };
 
@@ -369,25 +348,27 @@ export default function Scramble({ iv1, onSubmit, onError }) {
       <div className="max-w-4xl mx-auto">
         {/* Instructions */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border-l-4 border-indigo-600">
-          <h1 className="text-2xl font-bold text-slate-800">Warm-up</h1>
+          <h1 className="text-2xl font-bold text-slate-800">Instruction</h1>
           <p className="my-2 text-slate-600 italic text-base sm:text-lg leading-normal">
-            Before the next task, we’ll do a brief mental focusing exercise to
-            clear your mind.
+            {/* Before the next task, we'll do a brief mental focusing exercise to
+            clear your mind. */}
           </p>
-
           <div className="text-slate-700 space-y-2 leading-relaxed">
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>Each item shows a set of words.</li>
               <li>
-                Use the words to form <strong>one</strong> grammatically
-                correct, meaningful sentence.
+                The task consists of 20 items, each showing a set of words.
+              </li>
+              <li>
+                Use the words to form{" "}
+                <strong>one grammatically correct, meaningful sentence</strong>.
               </li>
               <li>
                 There will always be <strong>one extra word</strong> that you{" "}
-                <strong>do not</strong> use (the leftover word).
+                <strong>do not</strong> use (the <strong>leftover word</strong>
+                ).
               </li>
               <li>
-                Select the <strong>leftover word</strong> to indicate your
+                Click on the <strong>leftover word</strong> to indicate your
                 answer.
               </li>
               <li>
@@ -396,6 +377,9 @@ export default function Scramble({ iv1, onSubmit, onError }) {
               </li>
             </ul>
           </div>
+
+          {/* Interactive example */}
+          <ExampleDemo />
         </div>
 
         {/* Progress Bar */}
@@ -406,7 +390,7 @@ export default function Scramble({ iv1, onSubmit, onError }) {
                 Page {currentPage + 1} of {totalPages}
               </span>
               <span className="text-sm text-slate-600">
-                Items {startIndex + 1}-{endIndex} of {items.length}
+                Items {startIndex + 1}–{endIndex} of {items.length}
               </span>
             </div>
             <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden shadow-inner">
@@ -457,7 +441,7 @@ export default function Scramble({ iv1, onSubmit, onError }) {
                               CONFIG.answerMode === "click" &&
                               handleWordClick(item.id, word)
                             }
-                            className={`px-4 py-2 rounded-lg font-medium border shadow-sm transition-all ${
+                            className={`px-4 py-2 rounded-lg font-medium border shadow-sm transition-all select-none ${
                               CONFIG.answerMode === "click"
                                 ? "cursor-pointer hover:scale-105"
                                 : ""
@@ -497,13 +481,11 @@ export default function Scramble({ iv1, onSubmit, onError }) {
                       )}
                     </div>
                   ) : (
-                    <div>
-                      {errors[item.id] && (
-                        <p className="mt-2 text-sm text-red-600">
-                          {errors[item.id]}
-                        </p>
-                      )}
-                    </div>
+                    errors[item.id] && (
+                      <p className="mt-2 text-sm text-red-600">
+                        {errors[item.id]}
+                      </p>
+                    )
                   )}
                 </div>
               </div>
@@ -558,19 +540,14 @@ export default function Scramble({ iv1, onSubmit, onError }) {
           </div>
         </div>
       </div>
+
       <FullscreenLoading open={isSubmitting} />
 
       {CONFIG.display.animateCards && (
         <style>{`
           @keyframes fadeIn {
-            from {
-              opacity: 0;
-              transform: translateY(10px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
           }
         `}</style>
       )}
